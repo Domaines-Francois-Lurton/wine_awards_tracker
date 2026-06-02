@@ -46,34 +46,39 @@
   <div class="flex h-[calc(100vh-56px)]">
 
     <!-- ── SIDEBAR ── -->
-    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-100 overflow-y-auto py-5 px-5 space-y-6">
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col overflow-hidden">
 
-      <!-- Pays -->
-      <div>
-        <p class="filter-section-title">Pays</p>
-        <div class="mt-2 space-y-0.5" id="filterPays"></div>
+      <!-- Sections fixes (pas de scroll) -->
+      <div class="px-5 pt-5 space-y-5 flex-shrink-0">
+
+        <!-- Pays -->
+        <div>
+          <p class="filter-section-title">Pays</p>
+          <div class="mt-2 space-y-0.5" id="filterPays"></div>
+        </div>
+
+        <!-- Disponibilité -->
+        <div>
+          <p class="filter-section-title">Disponibilité</p>
+          <div class="mt-2 space-y-1" id="filterAvail"></div>
+        </div>
+
+        <!-- Couleur -->
+        <div>
+          <p class="filter-section-title">Couleur</p>
+          <div class="mt-2 space-y-1" id="filterCouleur"></div>
+        </div>
+
       </div>
 
-      <!-- Disponibilité -->
-      <div>
-        <p class="filter-section-title">Disponibilité</p>
-        <div class="mt-2 space-y-1" id="filterAvail"></div>
+      <!-- Domaine — scrollable en interne, prend l'espace restant -->
+      <div class="px-5 mt-5 flex flex-col min-h-0 flex-1">
+        <p class="filter-section-title flex-shrink-0">Domaine</p>
+        <div class="mt-2 space-y-1 overflow-y-auto flex-1 scrollbar-hide" id="filterDomaine"></div>
       </div>
 
-      <!-- Couleur -->
-      <div>
-        <p class="filter-section-title">Couleur</p>
-        <div class="mt-2 space-y-1" id="filterCouleur"></div>
-      </div>
-
-      <!-- Domaine -->
-      <div>
-        <p class="filter-section-title">Domaine</p>
-        <div class="mt-2 space-y-1" id="filterDomaine"></div>
-      </div>
-
-      <!-- Score -->
-      <div>
+      <!-- Score — toujours visible en bas -->
+      <div class="px-5 py-5 flex-shrink-0 border-t border-slate-50">
         <p class="filter-section-title">Score minimum</p>
         <div class="mt-2 grid grid-cols-2 gap-1.5">
           <button class="score-btn active" data-score="0">Tous</button>
@@ -82,6 +87,7 @@
           <button class="score-btn" data-score="95">95+</button>
         </div>
       </div>
+
     </aside>
 
     <!-- ── MAIN ── -->
