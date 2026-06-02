@@ -336,9 +336,19 @@ function wineMatches(wine) {
 
   if (f.search) {
     const q = norm(f.search);
-    const hay = [wine['Nom du vin'], wine['Domaine ou Marque'], wine['Millésime'],
-      ...state.criticCols.filter(c => wine[c])].join(' ');
-    if (!norm(hay).includes(q)) return false;
+    // Si la recherche est numérique, cherche dans les valeurs de scores de tous les critiques
+    const isNumericQuery = /^\d{2,3}$/.test(f.search.trim());
+    if (isNumericQuery) {
+      const scoreMatch = state.criticCols.some(col => {
+        const extracted = extractScoreNum(wine[col]);
+        return extracted !== null && Math.round(extracted) === parseInt(f.search.trim(), 10);
+      });
+      if (!scoreMatch) return false;
+    } else {
+      const hay = [wine['Nom du vin'], wine['Domaine ou Marque'], wine['Millésime'],
+        ...state.criticCols.map(c => wine[c]).filter(Boolean)].join(' ');
+      if (!norm(hay).includes(q)) return false;
+    }
   }
 
   if (f.score > 0 && maxScore(wine) < f.score) return false;
