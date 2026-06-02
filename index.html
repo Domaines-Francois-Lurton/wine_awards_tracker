@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wine Awards Tracker — François Lurton</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gray-50 text-slate-900 min-h-screen">
+
+  <!-- ── HEADER ── -->
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-40 h-14">
+    <div class="h-full px-5 flex items-center gap-4">
+      <!-- Logo -->
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <div class="w-8 h-8 bg-slate-900 rounded-md flex items-center justify-center">
+          <span class="text-white text-xs font-bold tracking-tight">FL</span>
+        </div>
+        <span class="text-sm font-bold tracking-widest uppercase text-slate-900">François Lurton</span>
+      </div>
+
+      <!-- Search (centered) -->
+      <div class="flex-1 flex justify-center px-4">
+        <div class="relative w-full max-w-xl">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input id="searchInput" type="text" placeholder="Vin, domaine, millésime, critique…"
+            class="w-full border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white placeholder-slate-400 transition" />
+        </div>
+      </div>
+
+      <!-- Export -->
+      <button id="exportBtn"
+        class="flex-shrink-0 flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Export CSV
+      </button>
+    </div>
+  </header>
+
+  <!-- ── APP LAYOUT ── -->
+  <div class="flex h-[calc(100vh-56px)]">
+
+    <!-- ── SIDEBAR ── -->
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-100 overflow-y-auto py-5 px-5 space-y-6">
+
+      <!-- Pays -->
+      <div>
+        <p class="filter-section-title">Pays</p>
+        <div class="mt-2 space-y-0.5" id="filterPays"></div>
+      </div>
+
+      <!-- Disponibilité -->
+      <div>
+        <p class="filter-section-title">Disponibilité</p>
+        <div class="mt-2 space-y-1" id="filterAvail"></div>
+      </div>
+
+      <!-- Couleur -->
+      <div>
+        <p class="filter-section-title">Couleur</p>
+        <div class="mt-2 space-y-1" id="filterCouleur"></div>
+      </div>
+
+      <!-- Domaine -->
+      <div>
+        <p class="filter-section-title">Domaine</p>
+        <div class="mt-2 space-y-1" id="filterDomaine"></div>
+      </div>
+
+      <!-- Score -->
+      <div>
+        <p class="filter-section-title">Score minimum</p>
+        <div class="mt-2 grid grid-cols-2 gap-1.5">
+          <button class="score-btn active" data-score="0">Tous</button>
+          <button class="score-btn" data-score="90">90+</button>
+          <button class="score-btn" data-score="92">92+</button>
+          <button class="score-btn" data-score="95">95+</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="flex-1 overflow-y-auto">
+
+      <!-- KPIs -->
+      <div class="bg-white border-b border-slate-100 px-6 py-4">
+        <div class="grid grid-cols-4 divide-x divide-slate-100">
+          <div class="pr-6">
+            <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1">Vins</div>
+            <div class="text-3xl font-bold text-slate-900" id="kpiTotal">—</div>
+          </div>
+          <div class="px-6">
+            <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1">Notés</div>
+            <div class="text-3xl font-bold text-slate-900" id="kpiNoted">—</div>
+          </div>
+          <div class="px-6">
+            <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1">Score moyen</div>
+            <div class="text-3xl font-bold text-slate-900" id="kpiAvg">—<span class="text-base font-normal text-slate-400">/100</span></div>
+          </div>
+          <div class="pl-6">
+            <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1">Scores 95+</div>
+            <div class="text-3xl font-bold text-red-500" id="kpiElite">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dernières notes -->
+      <div class="px-6 pt-5 pb-4">
+        <p class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-3 flex items-center gap-1.5">
+          <span class="text-amber-400">★</span> Dernières notes reçues
+        </p>
+        <div id="recentNotes" class="flex gap-3 overflow-x-auto pb-1 scrollbar-hide"></div>
+      </div>
+
+      <!-- Multi-select bar -->
+      <div id="multiBar" class="mx-6 mb-4 hidden">
+        <div class="bg-slate-900 rounded-xl px-5 py-3.5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+            <span id="multiCount" class="text-sm font-medium text-white"></span>
+          </div>
+          <button id="multiCopy"
+            class="bg-white text-slate-900 text-xs font-bold px-5 py-2 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3"/>
+            </svg>
+            Copier la sélection
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid header -->
+      <div class="px-6 flex items-center justify-between mb-3">
+        <p id="resultCount" class="text-xs font-semibold text-slate-500 uppercase tracking-widest"></p>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-400">Trier par</label>
+          <select id="sortSelect" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400">
+            <option value="score">Meilleur score</option>
+            <option value="name">Nom A–Z</option>
+            <option value="domaine">Domaine A–Z</option>
+            <option value="millesime">Millésime ↓</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="wineGrid" class="px-6 pb-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+        <div class="col-span-full text-sm text-slate-400 py-16 text-center">Chargement…</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── MODAL ── -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4" style="display:none">
+    <div id="modalBox" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Modal header -->
+      <div id="modalHeader" class="border-l-4 px-6 pt-6 pb-4 flex-shrink-0">
+        <div class="flex items-start justify-between">
+          <div>
+            <div id="modalDomaine" class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1"></div>
+            <div id="modalNom" class="text-xl font-bold text-slate-900"></div>
+            <div id="modalMeta" class="text-sm text-slate-500 mt-0.5"></div>
+          </div>
+          <button id="modalClose" class="ml-4 flex-shrink-0 text-slate-400 hover:text-slate-900 transition-colors mt-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Modal body -->
+      <div class="overflow-y-auto px-6 pb-6 flex-1">
+        <div id="modalScores" class="mt-4"></div>
+        <div id="modalRecap" class="mt-5 pt-4 border-t border-slate-100"></div>
+      </div>
+      <!-- Modal footer -->
+      <div class="px-6 py-4 border-t border-slate-100 flex-shrink-0 flex items-center justify-between bg-gray-50 rounded-b-2xl">
+        <div id="modalStock"></div>
+        <button id="modalCopyBtn"
+          class="flex items-center gap-2 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3"/>
+          </svg>
+          Copier les notes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"
+    class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-medium px-5 py-2.5 rounded-full opacity-0 transition-all duration-300 z-50 pointer-events-none shadow-xl">
+    ✓ Copié dans le presse-papiers
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+/* ── Scrollbar ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Sidebar ── */
+.filter-section-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.pays-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.38rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: left;
+  background: transparent;
+  border: none;
+}
+.pays-btn:hover { background: #f1f5f9; color: #0f172a; }
+.pays-btn.active { background: #f1f5f9; color: #0f172a; font-weight: 600; }
+.pays-btn .count { font-size: 0.65rem; color: #94a3b8; }
+.pays-btn.active .count { color: #64748b; }
+
+.filter-check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #475569;
+  cursor: pointer;
+  padding: 0.22rem 0;
+  user-select: none;
+}
+.filter-check:hover { color: #0f172a; }
+.filter-check input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  accent-color: #0f172a;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.filter-check .lhs { display: flex; align-items: center; gap: 0.45rem; }
+.filter-check .count { font-size: 0.65rem; color: #94a3b8; }
+
+.score-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  background: white;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+}
+.score-btn:hover { border-color: #94a3b8; color: #0f172a; }
+.score-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+
+.dot-rouge { width: 8px; height: 8px; border-radius: 50%; background: #b91c1c; flex-shrink: 0; }
+.dot-blanc { width: 8px; height: 8px; border-radius: 50%; background: #d97706; flex-shrink: 0; }
+.dot-rose  { width: 8px; height: 8px; border-radius: 50%; background: #ec4899; flex-shrink: 0; }
+.dot-autre { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+.dot-stock { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+.dot-epuise{ width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #94a3b8; flex-shrink: 0; }
+
+/* ══ WINE CARD ══ */
+.wine-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e8edf3;
+  border-left: 4px solid transparent;
+  padding: 12px 14px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+.wine-card:hover {
+  box-shadow: 0 4px 16px rgba(15,23,42,0.09);
+  transform: translateY(-1px);
+}
+.wine-card.selected { outline: 2px solid #0f172a; outline-offset: -2px; }
+
+.wine-card.color-rouge { border-left-color: #c0392b; }
+.wine-card.color-blanc { border-left-color: #d97706; }
+.wine-card.color-rose  { border-left-color: #db2777; }
+.wine-card.color-autre { border-left-color: #94a3b8; }
+
+/* Domaine */
+.card-row-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-domaine {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8896a8;
+  line-height: 1.3;
+}
+.card-checkbox {
+  width: 13px;
+  height: 13px;
+  accent-color: #0f172a;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Wine name */
+.card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+/* Vintage */
+.card-vintage {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Score badges row */
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e4e8ee;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.score-badge.elite {
+  background: #1e293b;
+  color: #fbbf24;
+  border-color: rgba(251,191,36,0.2);
+}
+.score-badge.top {
+  background: #0f172a;
+  color: white;
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 2px;
+}
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.stock-pill.en { color: #059669; }
+.stock-pill.ep { color: #b0bac8; }
+.stock-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* Copy icon button */
+.card-copy-btn {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 5px;
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid #e8edf3;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.card-copy-btn:hover { background: #0f172a; color: white; border-color: #0f172a; }
+
+/* ── Recent note cards ── */
+.recent-card {
+  flex-shrink: 0;
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-left: 3px solid transparent;
+  border-radius: 10px;
+  padding: 12px 14px;
+  width: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.12s;
+}
+.recent-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.07); }
+.recent-card.color-rouge { border-left-color: #c0392b; }
+.recent-card.color-blanc { border-left-color: #d97706; }
+.recent-card.color-rose  { border-left-color: #db2777; }
+.recent-card.color-autre { border-left-color: #94a3b8; }
+.recent-card .big-score { font-size: 1.75rem; font-weight: 800; line-height: 1; color: #0f172a; }
+.recent-card .score-critic { font-size: 0.58rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 3px; text-align: right; }
+
+/* ── Modal ── */
+.modal-color-rouge { border-left-color: #c0392b !important; }
+.modal-color-blanc { border-left-color: #d97706 !important; }
+.modal-color-rose  { border-left-color: #db2777 !important; }
+.modal-color-autre { border-left-color: #94a3b8 !important; }
+
+.modal-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f8fafc;
+}
+.modal-score-row:last-child { border-bottom: none; }
+.modal-critic-name { font-size: 0.8rem; color: #475569; }
+.modal-score-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.modal-score-val.elite { background: #0f172a; color: #fbbf24; }
