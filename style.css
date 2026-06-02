@@ -3,6 +3,18 @@
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Sidebar responsive ── */
+
+/* Desktop : domaine prend l'espace restant, sidebar sans scroll global */
+@media (min-width: 1024px) {
+  #sidebar { overflow: hidden; }
+  .domaine-list {
+    overflow-y: auto;
+    /* hauteur max = viewport - header - sections fixes approx */
+    max-height: calc(100vh - 56px - 340px);
+  }
+}
+
+/* Mobile/Tablette : sidebar en overlay, scroll global */
 @media (max-width: 1023px) {
   #sidebar {
     position: fixed;
@@ -10,12 +22,18 @@
     left: 0;
     z-index: 40;
     height: calc(100vh - 56px);
+    overflow-y: auto;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
-    box-shadow: 4px 0 20px rgba(15,23,42,0.12);
+    box-shadow: 4px 0 24px rgba(15,23,42,0.15);
   }
   #sidebar.open {
     transform: translateX(0);
+  }
+  .domaine-list {
+    /* sur mobile, pas de max-height : la sidebar entière est scrollable */
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
