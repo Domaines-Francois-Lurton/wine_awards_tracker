@@ -46,37 +46,58 @@ const state = {
 };
 
 // ── CSV parser ────────────────────────────────────────────────────────────────
+// Auto-detects delimiter (comma or semicolon) and skips non-header rows
+// before the real header row (the one containing 'Pays').
 function parseCSV(text) {
-  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const records = [];
-  let cur = '', inQ = false, fields = [];
-  const pushField = () => { fields.push(cur); cur = ''; };
-  const pushRecord = () => {
-    pushField();
-    if (fields.some(f => f)) records.push(fields);
-    fields = [];
-  };
-  for (let i = 0; i < t.length; i++) {
-    const c = t[i];
-    if (inQ) {
-      if (c === '"' && t[i + 1] === '"') { cur += '"'; i++; }
-      else if (c === '"') inQ = false;
-      else cur += c;
-    } else {
-      if (c === '"') inQ = true;
-      else if (c === ',') pushField();
-      else if (c === '\n') pushRecord();
-      else cur += c;
+  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trimEnd();
+
+  // Detect delimiter from first non-empty line
+  const firstLine = t.split('\n').find(l => l.trim()) || '';
+  const sep = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
+
+  // Split a single line respecting quoted fields
+  function splitLine(line) {
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) {
+        if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (c === '"') inQ = false;
+        else cur += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === sep) { fields.push(cur); cur = ''; }
+        else cur += c;
+      }
+    }
+    fields.push(cur);
+    return fields;
+  }
+
+  const lines = t.split('\n');
+
+  // Find the actual header row — must contain 'Pays' and 'Nom du vin'
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    if (lines[i].includes('Pays') && lines[i].includes('Nom du vin')) {
+      headerIdx = i;
+      break;
     }
   }
-  if (cur || fields.length) pushRecord();
-  if (!records.length) return { headers: [], rows: [] };
-  const headers = records[0];
-  const rows = records.slice(1).map(vals => {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
-    return obj;
-  });
+  if (headerIdx === -1) return { headers: [], rows: [] };
+
+  const headers = splitLine(lines[headerIdx]).map(h => h.trim());
+
+  const rows = lines.slice(headerIdx + 1)
+    .filter(l => l.trim() && l.replace(/[;,]/g, '').trim()) // skip empty rows
+    .map(l => {
+      const vals = splitLine(l);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+      return obj;
+    });
+
   return { headers, rows };
 }
 
