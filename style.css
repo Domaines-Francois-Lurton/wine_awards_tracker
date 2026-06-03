@@ -112,21 +112,21 @@
 .dot-stock { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
 .dot-epuise{ width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #94a3b8; flex-shrink: 0; }
 
-/* ══ WINE CARD — COMPACT ══ */
+/* ══ WINE CARD ══ */
 .wine-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #eaecf0;
   border-left: 3px solid transparent;
-  padding: 9px 11px 8px;
+  padding: 12px 14px 10px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   transition: box-shadow 0.13s, transform 0.1s;
 }
 .wine-card:hover {
-  box-shadow: 0 3px 12px rgba(15,23,42,0.08);
+  box-shadow: 0 4px 14px rgba(15,23,42,0.08);
   transform: translateY(-1px);
 }
 .wine-card.selected { outline: 2px solid #0f172a; outline-offset: -2px; }
@@ -136,80 +136,66 @@
 .wine-card.color-rose  { border-left-color: #db2777; }
 .wine-card.color-autre { border-left-color: #94a3b8; }
 
-/* Ligne 1 : domaine + checkbox */
+/* Domaine + checkbox */
 .card-row-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  margin-bottom: 5px;
 }
 .card-domaine {
-  font-size: 0.58rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #9aabb8;
   line-height: 1;
 }
 .card-checkbox {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   accent-color: #0f172a;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-/* Ligne 2 : nom · millésime inline */
-.card-name-row {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  min-width: 0;
-}
+/* Nom du vin */
 .card-name {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-vintage-inline {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  font-weight: 400;
-  flex-shrink: 0;
+  margin-bottom: 2px;
 }
 
-/* Ligne 3 : badges + stock + copier */
-.card-bottom-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 1px;
+/* Millésime */
+.card-vintage {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-bottom: 10px;
 }
+
+/* Badges */
 .card-badges {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 3px;
-  min-width: 0;
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 .score-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 7px;
+  border-radius: 5px;
   background: #f1f5f9;
   color: #334155;
   border: 1px solid #e4e8ee;
   white-space: nowrap;
   letter-spacing: 0.01em;
-  flex-shrink: 0;
 }
 .score-badge.elite {
   background: #1e293b;
@@ -217,11 +203,10 @@
   border-color: rgba(251,191,36,0.2);
 }
 .badge-extra {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   color: #94a3b8;
   align-self: center;
-  flex-shrink: 0;
-  padding-left: 1px;
+  padding-left: 2px;
 }
 .no-score {
   font-size: 0.62rem;
@@ -229,41 +214,39 @@
   font-style: italic;
 }
 
-/* Actions : stock dot + copier */
-.card-actions {
+/* Footer discret */
+.card-footer {
   display: flex;
   align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #f4f6f8;
+  margin-top: auto;
 }
-.stock-dot-only {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
-.stock-dot-only.en { background: #10b981; }
-.stock-dot-only.ep { background: #d1d5db; }
+.stock-pill.en { color: #059669; }
+.stock-pill.ep { color: #b0bac8; }
+.stock-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
 .card-copy-btn {
   display: flex;
   align-items: center;
   padding: 3px 5px;
   border-radius: 4px;
-  color: #b0bac8;
+  color: #c4cdd6;
   background: transparent;
-  border: 1px solid #e8edf3;
+  border: 1px solid #eaecf0;
   cursor: pointer;
   transition: all 0.12s;
 }
 .card-copy-btn:hover { background: #0f172a; color: white; border-color: #0f172a; }
-
-/* Compat — ancienne classe stock-dot dans modals etc */
-.stock-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.stock-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 600; }
-.stock-pill.en { color: #059669; }
-.stock-pill.ep { color: #b0bac8; }
 
 /* ── Recent note cards ── */
 .recent-card {
