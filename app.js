@@ -593,10 +593,13 @@ function loadMoreCards() {
   const end = currentPage * PAGE_SIZE;
   const batch = lastFiltered.slice(start, end);
 
+  const renderFn = state.view === 'list' ? renderRow : renderCard;
+  const selector = state.view === 'list' ? '.list-row' : '.wine-card';
+
   const frag = document.createDocumentFragment();
   batch.forEach(w => {
     const div = document.createElement('div');
-    div.innerHTML = renderCard(w, state.wines.indexOf(w));
+    div.innerHTML = renderFn(w, state.wines.indexOf(w));
     const card = div.firstElementChild;
     card.addEventListener('click', e => {
       if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn')) return;

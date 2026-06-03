@@ -289,8 +289,8 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  flex: 2;
-  min-width: 0;
+  width: 24%;
+  flex-shrink: 0;
   overflow: hidden;
 }
 .list-name {
@@ -300,7 +300,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 1;
 }
 .list-vintage {
   font-size: 0.72rem;
@@ -312,9 +311,9 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  min-width: 160px;
-  max-width: 200px;
+  width: 22%;
   flex-shrink: 0;
+  overflow: hidden;
 }
 .list-domaine {
   font-size: 0.7rem;
@@ -337,6 +336,7 @@
   flex-wrap: nowrap;
   gap: 3px;
   flex: 1;
+  min-width: 0;
   overflow: hidden;
 }
 .list-actions {
