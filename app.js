@@ -345,8 +345,14 @@ function wineMatches(wine) {
       });
       if (!scoreMatch) return false;
     } else {
-      const hay = [wine['Nom du vin'], wine['Domaine ou Marque'], wine['Millésime'],
-        ...state.criticCols.map(c => wine[c]).filter(Boolean)].join(' ');
+      // Inclut les noms complets ET les abréviations des critiques ayant une note
+      const criticNames = state.criticCols
+        .filter(c => wine[c])
+        .flatMap(c => [c, CRITIC_ABBREV[c] || '']);
+      const hay = [
+        wine['Nom du vin'], wine['Domaine ou Marque'], wine['Millésime'],
+        ...criticNames
+      ].join(' ');
       if (!norm(hay).includes(q)) return false;
     }
   }
