@@ -409,7 +409,7 @@ function renderCard(wine, originalIdx) {
   const code = COUNTRY_CODE[pays] || '';
 
   const allScores = getNumericScores(wine).sort((a, b) => b.num - a.num);
-  const visible = allScores.slice(0, 5);
+  const visible = allScores.slice(0, 4);
   const extra = allScores.length - visible.length;
 
   const badgesHTML = visible.length
