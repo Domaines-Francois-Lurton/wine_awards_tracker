@@ -53,9 +53,9 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.38rem 0.6rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
   color: #475569;
   cursor: pointer;
   transition: background 0.1s, color 0.1s;
@@ -73,10 +73,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #475569;
   cursor: pointer;
-  padding: 0.22rem 0;
+  padding: 0.14rem 0;
   user-select: none;
 }
 .filter-check:hover { color: #0f172a; }
