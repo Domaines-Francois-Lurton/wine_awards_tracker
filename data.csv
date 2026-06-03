@@ -1,5 +1,5 @@
 ﻿;;;;;;USA/CANADA;;;;;;;;OTHERS;;UK;;;;;;;;;;SPAIN;;FRANCE;;;;;;;;;;;;;;;Autres EUR;;;AMLAT;;;ASIA;ASIA;ASIA;;
-Pays;Domaine ou Marque;Couleur;Nom du vin;Millésime;Available;Wine Spectator;Wine Enthusiast;Wine Advocate;Wine & Spirits;Vinous;James Suckling;Wine Align;Jeb Dunnuck;Miquel Hudin;TASTED Andreas Larson;Decanter;IWC;IWSC;Tim Atkin;Jancis Robinson;Wine Merchant Magazine;Wine Anorak;Harpers;Sommelier Edit Awards (Via CIVR);Drinks Business;Gourmets;Guia Penin;RVF;Le Point;Terre de Vins;Anivin;Mondial Grenache;Mondial SB;Gilbert & Gaillard;Sud-Ouest;Concours de Bruxelles;Académie des Vins et de la Gastronomie;Concours Général Agricole de Paris;Concours IGP;Bettane & Desseauve;PARIS INTERNATIONAL TROPHY;GILBERT & GAILLARD (gold entre 87 et 89 / dble gold à partir 90);Falstaff;Yves Beck;Mundus vini;Descorchados;Vinomanos;la CAV;Tatler HK;Jeannie Cho Lee MW;Sakura Wine Awards;Récap rapide pour email;date_ajout
+Pays;Domaine ou Marque;Couleur;Nom du vin;Millésime;Available;Wine Spectator;Wine Enthusiast;Wine Advocate;Wine & Spirits;Vinous;James Suckling;Wine Align;Jeb Dunnuck;Miquel Hudin;TASTED Andreas Larson;Decanter;IWC;IWSC;Tim Atkin;Jancis Robinson;Wine Merchant Magazine;Wine Anorak;Harpers;Sommelier Edit Awards (Via CIVR);Drinks Business;Gourmets;Guia Penin;RVF;Le Point;Terre de Vins;Anivin;Mondial Grenache;Mondial SB;Gilbert & Gaillard;Sud-Ouest;Concours de Bruxelles;Académie des Vins et de la Gastronomie;Concours Général Agricole de Paris;Concours IGP;Bettane & Desseauve;PARIS INTERNATIONAL TROPHY;GILBERT & GAILLARD (gold entre 87 et 89 / dble gold à partir 90);Falstaff;Yves Beck;Mundus vini;Descorchados;Vinomanos;la CAV;Tatler HK;Jeannie Cho Lee MW;Sakura Wine Awards;RECAP EMAIL;date_ajout
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2018;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2019;;;82;;;;93;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2020;;86;;;;;91;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8,7 +8,7 @@ Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2022;;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2023;;;;;;86;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;89JS;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Cabernet Sauvignon;2024;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;93JS;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2018;;;83;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2019;;87;87;;;;92;;;;;;;;87;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92JS;03/06/2026
+Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2019;;87;87;;;;92;;;;;;;;87;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92JS;
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2020;;84;;;;90;92;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"92JS ; 90V ; 88TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2021;;;;;;;91;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"91JS ; 90TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2022;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91JS;
@@ -18,7 +18,7 @@ Argentine;Bodega Piedra Negra ;Rouge ;Alta Coleccion - Malbec;2025;x;;;;;;91;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2019;;;86;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2020;;;;;;88;91;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2021;;;;;;88-90;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2022;;;;;TOP 100 VALUE WINES -91;89;91;;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;;"TOP 100 W&S ; 89V ; 91JS ; 89TA ; 89D";03/06/2026
+Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2022;;;;;TOP 100 VALUE WINES -91;89;91;;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;;"TOP 100 W&S ; 89V ; 91JS ; 89TA ; 89D";
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2023;;;;;;89;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;;"90JS ; 89V ; 89D";
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2024;;;88 Best buy;;;89;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Pinot Gris;2025;x;;;;;90;90;;;;;;;;90;;;;;;;;;;;;;;;90 - Double Gold;;;;;;;;;;;;89;;;;;;"90TA ; 90 Vinous ; 90 Double Gold ; G&G ; 90JS";
@@ -28,21 +28,21 @@ Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2021;;;
 Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2022;;;BEST BUY -89;;;91;92;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;"89WE ""BEST BUY"" ; 91V ; 92JS ; 90TA ; 90D";
 Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2023;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;"91JS ; 90D";
 Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2024;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2025;x;;;;;91;90;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;"91 Vinous ; 88TA";03/06/2026
+Argentine;Bodega Piedra Negra ;Rosé ;Alta Coleccion - Pinot Gris Rosado;2025;x;;;;;91;90;;;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;"91 Vinous ; 88TA";
 Argentine;Bodega Piedra Negra ;Blanc ;Alta Coleccion - Torrontes;2017;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90JS;
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Cabernet Franc;2022;;;;91;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Cabernet Franc;2023;;;;;;91;90;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Cabernet Franc;2024;x;;;;;91;92;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"92JS ; 91TA ; 91V";03/06/2026
+Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Cabernet Franc;2024;x;;;;;91;92;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"92JS ; 91TA ; 91V";
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2018;;;;;;;92;;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2020;X;;;90;;90;91;;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;"92TA ; 92D ; 91JS ; 90V ; 90WA";
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2021;X;;;;;;91;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 91JS";
-Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2022;;;;90;;93;93;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;93;;;;;;"90WA ; 93V ; 93JS ; 90DECANTER ; 93D";03/06/2026
+Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2022;;;;90;;93;93;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;93;;;;;;"90WA ; 93V ; 93JS ; 90DECANTER ; 93D";
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Jackot;2023;;;;;;92;92;;;;;;;;91;16;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;"92V ; 92JS; 91TA ; 16JR; 90D";
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2019;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2020;;;;91;;90;93;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;90;91;;;;;"91WA ; 90V ; 93JS ; 90TA ; 90D ; 91VINO";
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2021;;;;;;;91;;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"91JS ; 89TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2022;;;;90+;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91;;;;;;"91D ; 91V ; 90+ WA";
-Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2024;x;;;;;91;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91TA;03/06/2026
+Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2024;x;;;;;91;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91TA;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2021;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2022;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2023;;;91;;;91;91;;;;;;;;93;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 91JS ; 91V";
@@ -52,18 +52,18 @@ Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Criolla;2025;x;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Cabernet Franc Reserve;2019;;;;;;90;;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Cabernet Franc Reserve;2023;;;;;;;;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2002;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2006;x;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2007;x;;93;88;;91;90;;;;;;;;;16,5;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2008;x;;92;88;;91+;92;;;;;;;;94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;03/06/2026
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2006;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2007;;;93;88;;91;90;;;;;;;;;16,5;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2008;;;92;88;;91+;92;;;;;;;;94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2012;;;;93;;;93-94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2013;x;90;93;94;;;94;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2013;;90;93;94;;;94;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2014;;93;91;93;;;97;;;;;90;;;95;;;94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2015;;96 - Top 8 World 2020;;92;;91;97;;;;;;;;93;;;94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2017;x;94;;93+;;93;98;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;95;93;;;;;;
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2017;;94;;93+;;93;98;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;95;93;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2018;;93;92;91;90;;95;;;;;;;;94;;;;;;;;;;;;;;;;;;;;;;;;;;;95;;;;;;"93WS ; 92WE ; 91WA ; 90W&S ; 95JS ; 94TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2019;x;94;;92;;93;94;;;;;;;;94;;;;;;;;;;;;;;;98 - Double Gold;;;;;;;;;;;;95;;;;;;"94WS ; 92WA ; 93V ; 93JS ; 94TA ; 95D ; 98G&G";
 Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2021;x;;94;;;94;95;;;;;;;;94;16,5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2023;x;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;96 - Ranking Mejores Los Chacayes;;;;;;;
+Argentine;Bodega Piedra Negra ;Rouge ;Chacayes;2023;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;96 - Ranking Mejores Los Chacayes;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Chardonnay Reserve;2020;X;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Chardonnay Reserve;2021;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2007;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -136,6 +136,8 @@ Argentine;Bodega Piedra Negra ;Rouge ;Santa Celina malbec;2024;X;;;;;;90;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Vuela - Pinot Gris;2025;x;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91JS;
 Argentine;Bodega Piedra Negra ;Rosé ;Vuela - Pinot Gris Rosé;2023;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90;;;;;;;
 Argentine;Bodega Piedra Negra ;Rosé ;Vuela - Rosé - Sparkling;NV;X;;;;;90;90;;;;;;;;86;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+France;Bordeaux ;Rouge ;Merlot;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+France;Bordeaux ;Blanc ;Sauvignon Blanc;2023;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Espagne;Campo Eliseo ;Rouge ;Campesino;2018;X;;;;;;;;;;;;;;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Espagne;Campo Eliseo ;Rouge ;Campesino;2019;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91JS;
 Espagne;Campo Eliseo ;Rouge ;Campesino;2020;;;90 BEST BUY;;;;;;;;;;;;;;;;;;;92;91;;;;;;;;;;;;;;;;;;;;;;;;;"92G ; 91GP ; 90WE - best buy";
@@ -265,7 +267,7 @@ France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon Blanc;2021;;;87;;;;;;;;;;;
 France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon Blanc;2022;x;;90 Best Buy;;;;;;;;;;;;;;;;;;;;;;;;;;Argent;;;;;;;91 (CDG);;;;;;;;;;;;"90WE - Best- Buy ; aregntMSB ; 91B&D";
 France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon Blanc;2023;;;86;;;;88;;;;;;;;;;;;;;;;;;;OR (CDG);ARGENT (VDF);;;;;;;;;OR;;;;;;;;;;;;"orTDV ; argentANIVIN ; orB&D";
 France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon Blanc;2024;x;;87;;;;;;;;;;;;;;;;;;;;;;;;OR (VDF);;;;;;;;;;;89 (CDG) 88 (VDF);;;;;;;;;;;
-France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon Blanc;2025;;;;;;;;;;;;;;;;;;;;;;;;;;;ARGENT;;;;;;;;;;;;;;;;;;;;;;
+France;Domaine Les Fumées Blanches ;;Sauvignon Blanc;2025;;;;;;;;;;;;;;;;;;;;;;;;;;;ARGENT;;;;;;;;;;;;;;;;;;;;;;
 France;Domaine Les Fumées Blanches ;Blanc ;Sauvignon d'Automne;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Domaine Les Fumées Blanches ;Blanc ;Terres Fumées Sauvignon Blanc;2019;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Bronze;;;;;;;;;;;;;
 France;Domaine Les Fumées Blanches ;Blanc ;Terres Fumées Sauvignon Blanc;2020;;;;;;;;;;;;;;;;;;;;;;;;;;;;;OR;;;;;;;;;;;;;;;;;;;;
@@ -294,7 +296,7 @@ Chili;Hacienda Araucano;Rouge ;CLO Tinto;2020;x;91;;91;;91;94 - TOP 100;; ;;;;;;
 Chili;Hacienda Araucano;Rouge ;CLO Tinto;2021;;;;;;93;94;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"92WA ; 89V ; 93JS ; 92TA";
 Chili;Hacienda Araucano;Rouge ;CLO Tinto;2022;;90;;;;92;94;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"92V ; 91TA ; 94JS + Top 100 Chile ; 90WS";
 Chili;Hacienda Araucano;Rouge ;CLO Tinto;2024;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;95;;;;;;;
-Chili;Hacienda Araucano;Rouge ;Humo Blanco Pinot Noir ;2024;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Chili;Hacienda Araucano;Rouge ;Humo Blanco Pinot Noir ;2024;;89;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;03/06/2026
 Chili;Hacienda Araucano;Rouge ;Edicion Limitada - Cabernet Franc;2019;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"90WA ; 91V ; 93Descorchados";
 Chili;Hacienda Araucano;Rouge ;Edicion Limitada - Cabernet Franc;2020;;89;90- best buy;88;;90;93;;;;;;;;86;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Rouge ;Edicion Limitada - Cabernet Franc;2021;;;;;;;93 - TOP 100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;;;
@@ -359,7 +361,7 @@ Chili;Hacienda Araucano;Blanc ;CLO Blanco;2021;;;;91;;89;93;;;;;;;;91;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;CLO Blanco;2022;x;;;90;;91;;;;;;91;;;95;;;;;;;;;;;;;;;;;;;;;;;;;;;93;;;;;;" 90WA ; 93D ; 95TA ; 91V ; 91Decanter";
 Chili;Hacienda Araucano;Blanc ;CLO Blanco;2023;x;;;;;90;92;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 90V ; 92JS";
 Chili;Hacienda Araucano;Blanc ;CLO Blanco;2024;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;94;;;;;;;
-Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2024;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2024;;90;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;03/06/2026
 Chili;Hacienda Araucano;Blanc ;Edicion Limitada - Chardonnay;2021;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Edicion Limitada - Chardonnay;2022;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;88;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Edicion Limitada - Chardonnay;2024;;;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -477,3 +479,14 @@ France;Mas d'en Janeil ;Rouge ;Maury Mas Janeil;;X;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Autre;Sarrat Del Mas;2022;;;;;89;;91;;;;;;;;;;;;;;;;;;;;OR;;;;;;;;;;;;;;;;;;;;;;
 France;Terra Sana ;Blanc ;Terra Sana;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Terra Sana ;Rouge ;Terra Sana;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
