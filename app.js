@@ -641,7 +641,8 @@ function bindCardListeners(container) {
       const idx = +cb.dataset.idx;
       if (cb.checked) state.selected.add(idx);
       else state.selected.delete(idx);
-      cb.closest('.wine-card').classList.toggle('selected', cb.checked);
+      const card = cb.closest('.wine-card') || cb.closest('.list-row');
+      if (card) card.classList.toggle('selected', cb.checked);
       updateMultiBar();
     });
   });
@@ -700,10 +701,11 @@ function updateMultiBar() {
   const bar = document.getElementById('multiBar');
   const n = state.selected.size;
   if (n > 0) {
-    document.getElementById('multiCount').textContent =
-      t('vinsSelectionnes', n);
+    document.getElementById('multiCount').textContent = t('vinsSelectionnes', n);
+    bar.style.display = 'block';
     bar.classList.remove('hidden');
   } else {
+    bar.style.display = 'none';
     bar.classList.add('hidden');
   }
 }
