@@ -678,12 +678,8 @@ function openModal(idx) {
        }).join('')}</div>`
     : '<div class="text-sm text-slate-400 italic">Aucune note renseignée.</div>';
 
-  // Récap
-  const recap = wine['Récap rapide pour email'];
-  document.getElementById('modalRecap').innerHTML = recap
-    ? `<div class="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-2">Récap email</div>
-       <div class="text-sm text-slate-600 font-mono bg-slate-50 rounded-lg px-3 py-2">${recap}</div>`
-    : '';
+  // Récap email masqué
+  document.getElementById('modalRecap').innerHTML = '';
 
   // Stock
   document.getElementById('modalStock').innerHTML = stock

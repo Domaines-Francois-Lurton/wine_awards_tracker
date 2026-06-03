@@ -16,7 +16,6 @@
     background: white;
     z-index: 2;
     margin-top: auto;
-    padding-bottom: 0 !important;
   }
   #filterDomaine {
     max-height: 35vh;
@@ -290,16 +289,18 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  min-width: 180px;
-  max-width: 220px;
-  flex-shrink: 0;
+  flex: 2;
+  min-width: 0;
+  overflow: hidden;
 }
 .list-name {
   font-size: 0.85rem;
   font-weight: 700;
   color: #0f172a;
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
 }
 .list-vintage {
   font-size: 0.72rem;
