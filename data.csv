@@ -45,7 +45,7 @@ Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2022;;;;90+;;9
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2024;x;;;;;91;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91TA;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2021;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2022;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
-Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2023;;;91;;;91;91;;;;;;;;93;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 91JS ; 91V";
+Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2023;;;91;;;91;91;;;;;;;;93;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 91JS ; 91V";20/05/2026
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande Sauvignon Blanc;2023;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande Sauvignon Blanc;2024;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Criolla;2025;x;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90 - Double Gold;;;;;;;;;;;;;;;;;;90 G&G;
@@ -346,7 +346,7 @@ Chili;Hacienda Araucano;Rouge ;L'Atelier - Carmenere SSO2;2024;;;;;;;91;;;;;;;;;
 Chili;Hacienda Araucano;Rosé ;L'Atelier - Pet Nat;2021;;;;;;90;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90V;
 Chili;Hacienda Araucano;Rosé ;L'Atelier - Pet Nat;2023;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"91 ""revelacion""";;;;;;"90WA ; 92D";
 Chili;Hacienda Araucano;Rosé ;L'Atelier - Pet Nat;2024;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Chili;Hacienda Araucano;Blanc ;L'Atelier - Pet Nat;2024;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Chili;Hacienda Araucano;Blanc ;L'Atelier - Pet Nat;2024;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;20/05/2026
 Chili;Hacienda Araucano;Rosé ;Une;NV;X;;;;;;89;;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;92;;;;91Descorchados;
 Chili;Hacienda Araucano;Rosé ;Une;2024;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Araucano Reserva - Chardonnay;2018;X;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;
@@ -428,7 +428,7 @@ France;La Mule ;Blanc ;Terret & Sauvignon;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;C2;2021;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;OR;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;C2;2022;;;91 BEST BUY;;89;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;C2;2023;;;;;;;91;;;;;;;;;;;;;;;;;;;OR;;;;;;;;;;;;;;;;;;;;;;;
-France;Mas d'en Janeil ;Rouge ;C2;2025;;;;;;;91;;;;;;;;;;;;;92;;;;;;OR;;;;;;;;;;;;;;;;;;;;;;;
+France;Mas d'en Janeil ;Rouge ;C2;2025;;;;;;;91;;;;;;;;;;;;;92;;;;;;OR;;;;;;;;;;;;;;;;;;;;;;;21/04/2026
 France;Mas d'en Janeil ;Rouge ;Le Pas de la Mule;2006;;91;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;Le Pas de la Mule;2007;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;Le Pas de la Mule;2008;;92;87;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -439,6 +439,7 @@ France;Mas d'en Janeil ;Blanc ;Le Petit Pas;2020;X;;;;;;90;;;89*;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Blanc ;Le Petit Pas;2022;;;90 BEST BUY;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Gold Medal;;
 France;Mas d'en Janeil ;Blanc ;Le Petit Pas;2023;;;90 BEST BUY;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;90 Best Buy WE;
 France;Mas d'en Janeil ;Blanc ;Le Petit Pas;2024;;;;;;;;;;;;;;;;;;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;
+France;Mas d'en Janeil ;Blanc ;Le Petit Pas;2025;;;;;;;;;;;;;;;;;;;;;;;;;;OR;;;;;;;;;;;;;;;;;;;;;;;20/05/2026
 France;Mas d'en Janeil ;Rouge ;Le Petit Pas;2017;;85;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;Le Petit Pas;2018;X;84;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 France;Mas d'en Janeil ;Rouge ;Le Petit Pas;2019;X;;;87;87;;91;;;89*;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
