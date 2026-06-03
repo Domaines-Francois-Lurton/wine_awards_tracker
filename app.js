@@ -408,7 +408,7 @@ function renderCard(wine, originalIdx) {
   const code = COUNTRY_CODE[pays] || '';
 
   const allScores = getNumericScores(wine).sort((a, b) => b.num - a.num);
-  const visible = allScores.slice(0, 5);
+  const visible = allScores.slice(0, 4);
   const extra = allScores.length - visible.length;
 
   const badgesHTML = visible.length
@@ -416,29 +416,36 @@ function renderCard(wine, originalIdx) {
         const abbrev = CRITIC_ABBREV[col] || col;
         const display = Number.isInteger(num) ? num : num.toFixed(1);
         return `<span class="score-badge ${num > 96 ? 'elite' : ''}">${abbrev} ${display}</span>`;
-      }).join('') + (extra > 0 ? `<span style="font-size:.65rem;color:#94a3b8;align-self:center;padding-left:2px">+${extra}</span>` : '')
-    : '<span style="font-size:.65rem;color:#cbd5e1;font-style:italic">Aucune note</span>';
+      }).join('') + (extra > 0 ? `<span class="badge-extra">+${extra}</span>` : '')
+    : '<span class="no-score">Aucune note</span>';
 
   return `
     <div class="wine-card ${colorClass} ${isSelected ? 'selected' : ''}" data-idx="${originalIdx}">
+
+      <!-- Ligne 1 : domaine + checkbox -->
       <div class="card-row-top">
         <span class="card-domaine">${(wine['Domaine ou Marque'] || '').trim()} · ${code}</span>
         <input type="checkbox" class="card-checkbox" data-idx="${originalIdx}" ${isSelected ? 'checked' : ''} />
       </div>
-      <div class="card-name">${wine['Nom du vin'] || ''}</div>
-      <div class="card-vintage">${wine['Millésime'] || '—'}</div>
-      <div class="card-badges">${badgesHTML}</div>
-      <div class="card-footer">
-        <span class="stock-pill ${stock ? 'en' : 'ep'}">
-          <span class="stock-dot" style="background:${stock ? '#10b981' : '#cbd5e1'}"></span>
-          ${stock ? 'En stock' : 'Épuisé'}
-        </span>
-        <button class="card-copy-btn" data-idx="${originalIdx}" title="Copier les notes">
-          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3"/>
-          </svg>
-        </button>
+
+      <!-- Ligne 2 : nom · millésime -->
+      <div class="card-name-row">
+        <span class="card-name">${wine['Nom du vin'] || ''}</span>
+        <span class="card-vintage-inline">${wine['Millésime'] || '—'}</span>
+      </div>
+
+      <!-- Ligne 3 : badges + stock + copier -->
+      <div class="card-bottom-row">
+        <div class="card-badges">${badgesHTML}</div>
+        <div class="card-actions">
+          <span class="stock-dot-only ${stock ? 'en' : 'ep'}" title="${stock ? 'En stock' : 'Épuisé'}"></span>
+          <button class="card-copy-btn" data-idx="${originalIdx}" title="Copier les notes">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>`;
 }
