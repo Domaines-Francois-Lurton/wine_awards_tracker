@@ -377,6 +377,10 @@
 .list-stock.en { color: #059669; }
 .list-stock.ep { color: #b0bac8; }
 
+/* Zone dernières notes — draggable */
+#recentNotes { cursor: grab; }
+#recentNotes:active { cursor: grabbing; }
+
 /* ── Recent note cards ── */
 .recent-card {
   flex-shrink: 0;

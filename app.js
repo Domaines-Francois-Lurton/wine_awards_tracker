@@ -403,6 +403,32 @@ function renderRecentNotes(wines) {
   el.querySelectorAll('.recent-card').forEach(card => {
     card.addEventListener('click', () => openModal(+card.dataset.idx));
   });
+
+  // Scroll horizontal à la molette sur desktop
+  el.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    el.scrollLeft += e.deltaY;
+  }, { passive: false });
+
+  // Drag scroll (clic + glisser gauche/droite)
+  let isDragging = false, startX = 0, scrollStart = 0;
+  el.addEventListener('mousedown', e => {
+    isDragging = true;
+    startX = e.pageX;
+    scrollStart = el.scrollLeft;
+    el.style.cursor = 'grabbing';
+    el.style.userSelect = 'none';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    el.scrollLeft = scrollStart - (e.pageX - startX);
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    el.style.cursor = 'grab';
+    el.style.userSelect = '';
+  });
 }
 
 // ── Filtering & sorting ───────────────────────────────────────────────────────
