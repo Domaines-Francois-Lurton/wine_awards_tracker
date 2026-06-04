@@ -461,20 +461,6 @@ function sortWines(arr) {
 }
 
 // ── Card rendering ────────────────────────────────────────────────────────────
-function renderScoreBadges(wine) {
-  // Only numeric scores, sorted highest → lowest left → right
-  const scores = getNumericScores(wine)
-    .sort((a, b) => b.num - a.num)
-    .slice(0, 6);
-  if (!scores.length) return '<span class="text-[10px] text-slate-300 italic">Aucune note</span>';
-  return scores.map(({ col, num }) => {
-    const abbrev = CRITIC_ABBREV[col] || col;
-    const isElite = num > 96;
-    const display = Number.isInteger(num) ? num : num.toFixed(1);
-    return `<span class="score-badge ${isElite ? 'elite' : ''}">${abbrev} ${display}</span>`;
-  }).join('');
-}
-
 function renderCard(wine, originalIdx) {
   const colorClass = colorCssClass(wine['Couleur']);
   const stock = isInStock(wine);
@@ -586,11 +572,30 @@ const PAGE_SIZE = 60;
 let currentPage = 1;
 let lastFiltered = [];
 
-function bindCardEvents(cards) {
-  cards.forEach(card => {
+// Attache tous les événements sur la grille (click modal, checkbox, copier)
+function bindEvents(container) {
+  const selector = state.view === 'list' ? '.list-row' : '.wine-card';
+  container.querySelectorAll(selector).forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn')) return;
       openModal(+card.dataset.idx);
+    });
+  });
+  container.querySelectorAll('.card-checkbox').forEach(cb => {
+    cb.addEventListener('change', e => {
+      e.stopPropagation();
+      const idx = +cb.dataset.idx;
+      if (cb.checked) state.selected.add(idx);
+      else state.selected.delete(idx);
+      const card = cb.closest('.wine-card') || cb.closest('.list-row');
+      if (card) card.classList.toggle('selected', cb.checked);
+      updateMultiBar();
+    });
+  });
+  container.querySelectorAll('.card-copy-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      copyToClipboard(buildCopyLine(state.wines[+btn.dataset.idx]));
     });
   });
 }
@@ -629,29 +634,7 @@ function renderGrid() {
     grid.appendChild(sentinel);
   }
 
-  const selector = state.view === 'list' ? '.list-row' : '.wine-card';
-  bindCardEvents(grid.querySelectorAll(selector));
-  bindCardListeners(grid);
-}
-
-function bindCardListeners(container) {
-  container.querySelectorAll('.card-checkbox').forEach(cb => {
-    cb.addEventListener('change', e => {
-      e.stopPropagation();
-      const idx = +cb.dataset.idx;
-      if (cb.checked) state.selected.add(idx);
-      else state.selected.delete(idx);
-      const card = cb.closest('.wine-card') || cb.closest('.list-row');
-      if (card) card.classList.toggle('selected', cb.checked);
-      updateMultiBar();
-    });
-  });
-  container.querySelectorAll('.card-copy-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      copyToClipboard(buildCopyLine(state.wines[+btn.dataset.idx]));
-    });
-  });
+  bindEvents(grid);
 }
 
 function loadMoreCards() {
@@ -665,17 +648,10 @@ function loadMoreCards() {
   const renderFn = state.view === 'list' ? renderRow : renderCard;
   const selector = state.view === 'list' ? '.list-row' : '.wine-card';
 
+  const tmp = document.createElement('div');
+  tmp.innerHTML = batch.map(w => renderFn(w, state.wines.indexOf(w))).join('');
   const frag = document.createDocumentFragment();
-  batch.forEach(w => {
-    const div = document.createElement('div');
-    div.innerHTML = renderFn(w, state.wines.indexOf(w));
-    const card = div.firstElementChild;
-    card.addEventListener('click', e => {
-      if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn')) return;
-      openModal(+card.dataset.idx);
-    });
-    frag.appendChild(card);
-  });
+  while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
   if (sentinel) {
     grid.removeChild(sentinel);
@@ -693,7 +669,7 @@ function loadMoreCards() {
     }
   }
 
-  bindCardListeners(grid);
+  bindEvents(grid);
 }
 
 // ── Multi-select bar ──────────────────────────────────────────────────────────
