@@ -828,7 +828,14 @@ async function init() {
   }
 
   const { headers, rows } = parseCSV(text);
-  state.criticCols = headers.filter(h => !META_COLS.has(h) && h !== '');
+  // Exclut les colonnes meta + toute colonne contenant "recap" ou "email" (insensible à la casse)
+  const isMetaCol = h => {
+    if (!h || h === '') return true;
+    if (META_COLS.has(h)) return true;
+    const hn = h.toLowerCase().replace(/\s+/g, '');
+    return hn.includes('recap') || hn.includes('email') || hn.includes('récap');
+  };
+  state.criticCols = headers.filter(h => !isMetaCol(h));
   // Filtre strict : seuls les pays connus sont acceptés (évite les lignes décalées ou corrompues)
   const VALID_PAYS = new Set(['france', 'argentine', 'espagne', 'chili']);
   state.wines = rows.filter(w => VALID_PAYS.has((w['Pays'] || '').trim().toLowerCase()));
