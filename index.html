@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="icon" href="favicon.ico">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wine Awards Tracker - Domaines François Lurton</title>
-  <meta name="description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines - critics worldwide." />
+  <title>Wine Awards Tracker — Domaines François Lurton</title>
+  <meta name="description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines — critics worldwide." />
 
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:url"         content="https://domaines-francois-lurton.github.io/wine_awards_tracker/" />
-  <meta property="og:title"       content="Wine Awards Tracker - Domaines François Lurton" />
-  <meta property="og:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines - critics worldwide." />
+  <meta property="og:title"       content="Wine Awards Tracker — Domaines François Lurton" />
+  <meta property="og:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines — critics worldwide." />
   <meta property="og:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
 
   <!-- Twitter / X Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="Wine Awards Tracker - Domaines François Lurton" />
+  <meta name="twitter:title"       content="Wine Awards Tracker — Domaines François Lurton" />
   <meta name="twitter:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines." />
   <meta name="twitter:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -85,7 +84,7 @@
           <div class="mt-2 space-y-0.5" id="filterPays"></div>
         </div>
 
-        <div>
+        <div id="filterAvailSection">
           <p class="filter-section-title" data-i18n="disponibilite">Disponibilité</p>
           <div class="mt-2 space-y-1" id="filterAvail"></div>
         </div>
@@ -226,6 +225,54 @@
       </svg>
     </div>
     <span style="font-size:0.72rem;font-weight:600;letter-spacing:0.01em">Copié dans le presse-papiers</span>
+  </div>
+
+  <!-- ── PANNEAU ADMIN CACHÉ (Ctrl+Shift+A) ── -->
+  <div id="adminPanel" style="
+    display:none; position:fixed; bottom:24px; right:24px; z-index:9999;
+    background:#1e293b; color:#f8fafc; border-radius:16px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4); padding:18px 22px; width:280px;
+    font-family:inherit; border:1px solid #334155;">
+
+    <!-- Titre -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07 10 10 0 0 1 19.07 4.93z"/></svg>
+      <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8">Admin</span>
+      <button id="adminClose" style="margin-left:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;line-height:1;padding:0" title="Fermer">✕</button>
+    </div>
+
+    <!-- Toggle stock -->
+    <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin-bottom:16px">
+      <span style="font-size:0.82rem;font-weight:500">Afficher stock / dispo</span>
+      <span style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+        <input type="checkbox" id="adminStockCheck" style="opacity:0;width:0;height:0;position:absolute">
+        <span id="adminStockSlider" style="position:absolute;inset:0;border-radius:22px;transition:background 0.2s;background:#334155"></span>
+        <span id="adminStockKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
+      </span>
+    </label>
+
+    <!-- Token GitHub -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:0.68rem;color:#94a3b8;display:block;margin-bottom:4px">GitHub Token (PAT)</label>
+      <input id="adminToken" type="password" placeholder="ghp_xxxxxxxxxxxx"
+        style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:8px;
+               color:#f8fafc;font-size:0.75rem;padding:7px 10px;outline:none;font-family:monospace" />
+    </div>
+
+    <!-- Bouton publier -->
+    <button id="adminSave" style="
+      width:100%;background:#10b981;color:white;border:none;border-radius:8px;
+      padding:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s">
+      Publier pour tous
+    </button>
+
+    <!-- Status -->
+    <p id="adminStatus" style="font-size:0.68rem;margin-top:8px;min-height:1.2em;text-align:center;color:#64748b"></p>
+
+    <p style="font-size:0.65rem;color:#475569;margin-top:8px;line-height:1.4;border-top:1px solid #334155;padding-top:8px">
+      Raccourci : <kbd style="background:#0f172a;padding:1px 5px;border-radius:4px;font-family:monospace">Ctrl+Shift+A</kbd>
+      &nbsp;·&nbsp; Le token est sauvegardé localement.
+    </p>
   </div>
 
   <script src="app.js"></script>
