@@ -42,7 +42,7 @@ Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2019;;;;;;;92;
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2020;;;;91;;90;93;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;90;91;;;;;"91WA ; 90V ; 93JS ; 90TA ; 90D ; 91VINO";
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2021;;;;;;;91;;;;;;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"91JS ; 89TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2022;;;;90+;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91;;;;;;"91D ; 91V ; 90+ WA";
-Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec SSO2;2024;x;;;;;91;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91TA;
+Argentine;Bodega Piedra Negra ;Rouge ;Arroyo Grande - Malbec;2024;x;;;;;91;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;91TA;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2021;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2022;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande - Naranjo;2023;;;91;;;91;91;;;;;;;;93;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93TA ; 91JS ; 91V";03/06/2026
@@ -78,7 +78,7 @@ Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2022;x;;;91;;93;94 - TO
 Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2023;x;;"94 
 (Hidden Gem)";;;;93;;;;;;;;96 - Best white blend;17+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"96TA (Best White Blend) ; 17+JR ; 93JS";
 Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2024;;;;;;95;96;;;;;;;;96;;;;;;;;;;;;;;;;;;;;;;;;;;;94 - Ranking Mejores blends Blancos;;;;;;"96TA ; 96 JS ; 94D + Mejores blends blancos ; 95Vinous";
-Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2025;;;;;;95;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;11/06/2026
+Argentine;Bodega Piedra Negra ;Blanc ;Gran Lurton Blanco;2025;;;;;;95;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rosé ;Gran Lurton Rosado;2019;;;;;;;92;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
 Argentine;Bodega Piedra Negra ;Rosé ;Gran Lurton Rosado;2022;;;;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
 Argentine;Bodega Piedra Negra ;Rosé ;Gran Lurton Rosado;2023;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;REVELACION 93;;;;;;;
@@ -130,7 +130,7 @@ Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2020;X;;;;;90;93;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2021;X;;;;;;;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2022;X;;;89;;91;93;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2023;;;;;;91;92;;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;92;;;;;;;
-Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2025;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;11/06/2026
+Argentine;Bodega Piedra Negra ;Blanc ;Pinot Gris Reserve;2025;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Blanc ;Arroyo Grande Pinot Gris Reserve;2024;x;;;;;92;93;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"93JS ; 92V ; 91TA";
 Argentine;Bodega Piedra Negra ;Rouge ;Ruta22;2019;X;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Argentine;Bodega Piedra Negra ;Rouge ;Ruta22;2020;X;;;;;88-89;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -305,7 +305,8 @@ Chili;Hacienda Araucano;Blanc ;L'Atelier - Naranjo;2022;;;;91;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2022;;;;90;;;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2021;;87;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2020;;;;89;;88;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2019;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2023;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2019;;;;;;;92;;;;;;;;91;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;Humo Blanco Sauvignon Blanc;2018;;;;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Chili;Hacienda Araucano;Blanc ;L'Atelier - Naranjo;2023;;;91;;;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;03/06/2026
 Chili;Hacienda Araucano;Rosé ;L'Atelier - Pet Nat;2021;;;;;;90;89;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
