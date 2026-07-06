@@ -20,6 +20,7 @@
   <meta name="twitter:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines." />
   <meta name="twitter:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="text-slate-900 min-h-screen" style="background-color:#F7F6F4">
@@ -56,12 +57,19 @@
           <button id="langFr" class="lang-btn px-2.5 py-1.5">FR</button>
           <button id="langEn" class="lang-btn px-2.5 py-1.5 border-l border-slate-200">EN</button>
         </div>
-        <button id="exportBtn"
+        <button id="exportXlsxBtn"
           class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
-          <span class="hidden sm:inline">CSV</span>
+          <span class="hidden sm:inline">XLSX</span>
+        </button>
+        <button id="adminBtn" title="Administration"
+          class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+          <span class="hidden sm:inline">Admin</span>
         </button>
       </div>
     </div>
@@ -230,9 +238,12 @@
 
   <!-- ── PANNEAU ADMIN CACHÉ (Ctrl+Shift+A) ── -->
   <div id="adminPanel" style="
-    display:none; position:fixed; bottom:24px; right:24px; z-index:9999;
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(15,23,42,0.6); align-items:center; justify-content:center;">
+  <div style="
     background:#1e293b; color:#f8fafc; border-radius:16px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.4); padding:18px 22px; width:280px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4); padding:20px 24px; width:640px; max-width:92vw;
+    max-height:85vh; overflow-y:auto;
     font-family:inherit; border:1px solid #334155;">
 
     <!-- Titre -->
@@ -242,40 +253,103 @@
       <button id="adminClose" style="margin-left:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;line-height:1;padding:0" title="Fermer">✕</button>
     </div>
 
-    <!-- Toggle stock -->
-    <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin-bottom:16px">
-      <span style="font-size:0.82rem;font-weight:500">Afficher stock / dispo</span>
-      <span style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
-        <input type="checkbox" id="adminStockCheck" style="opacity:0;width:0;height:0;position:absolute">
-        <span id="adminStockSlider" style="position:absolute;inset:0;border-radius:22px;transition:background 0.2s;background:#334155"></span>
-        <span id="adminStockKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
-      </span>
-    </label>
-
-    <!-- Token GitHub -->
-    <div style="margin-bottom:12px">
-      <label style="font-size:0.68rem;color:#94a3b8;display:block;margin-bottom:4px">GitHub Token (PAT)</label>
-      <input id="adminToken" type="password" placeholder="ghp_xxxxxxxxxxxx"
+    <!-- Vue connexion -->
+    <div id="adminLoginView">
+      <label style="font-size:0.68rem;color:#94a3b8;display:block;margin-bottom:4px">Mot de passe administrateur</label>
+      <input id="adminPassword" type="password" placeholder="••••••••"
         style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:8px;
-               color:#f8fafc;font-size:0.75rem;padding:7px 10px;outline:none;font-family:monospace" />
+               color:#f8fafc;font-size:0.8rem;padding:8px 10px;outline:none" />
+      <button id="adminLoginBtn" style="
+        width:100%;margin-top:10px;background:#10b981;color:white;border:none;border-radius:8px;
+        padding:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s">
+        Se connecter
+      </button>
+      <p id="adminLoginStatus" style="font-size:0.68rem;margin-top:8px;min-height:1.2em;text-align:center;color:#64748b"></p>
     </div>
 
-    <!-- Bouton publier -->
-    <button id="adminSave" style="
-      width:100%;background:#10b981;color:white;border:none;border-radius:8px;
-      padding:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s">
-      Publier pour tous
-    </button>
+    <!-- Vue admin (après connexion) -->
+    <div id="adminMainView" style="display:none">
 
-    <!-- Status -->
-    <p id="adminStatus" style="font-size:0.68rem;margin-top:8px;min-height:1.2em;text-align:center;color:#64748b"></p>
+      <!-- Toggle stock -->
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin-bottom:14px">
+        <span style="font-size:0.82rem;font-weight:500">Afficher stock / dispo</span>
+        <span style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+          <input type="checkbox" id="adminStockCheck" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="adminStockSlider" style="position:absolute;inset:0;border-radius:22px;transition:background 0.2s;background:#334155"></span>
+          <span id="adminStockKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
+        </span>
+      </label>
 
-    <p style="font-size:0.65rem;color:#475569;margin-top:8px;line-height:1.4;border-top:1px solid #334155;padding-top:8px">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="adminAddWineBtn" style="flex:1;background:#334155;color:#f8fafc;border:none;border-radius:8px;padding:8px;font-size:0.78rem;font-weight:600;cursor:pointer">+ Ajouter un vin</button>
+        <button id="adminLogoutBtn" style="background:none;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:8px 12px;font-size:0.78rem;cursor:pointer">Déconnexion</button>
+      </div>
+
+      <input id="adminWineSearch" placeholder="Rechercher un vin…"
+        style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:8px;
+               color:#f8fafc;font-size:0.78rem;padding:7px 10px;outline:none;margin-bottom:8px" />
+      <div id="adminWineList" style="max-height:220px;overflow-y:auto;border:1px solid #334155;border-radius:8px;margin-bottom:14px"></div>
+
+      <!-- Formulaire d'édition -->
+      <div id="adminEditForm" style="display:none;border-top:1px solid #334155;padding-top:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Pays</label>
+            <select id="fPays" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px">
+              <option value="france">France</option>
+              <option value="argentine">Argentine</option>
+              <option value="espagne">Espagne</option>
+              <option value="chili">Chili</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Couleur</label>
+            <select id="fCouleur" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px">
+              <option value="rouge">Rouge</option>
+              <option value="blanc">Blanc</option>
+              <option value="rosé">Rosé</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+        </div>
+        <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Domaine ou marque</label>
+        <input id="fDomaine" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
+        <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Nom du vin</label>
+        <input id="fNom" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Millésime</label>
+            <input id="fMillesime" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
+          </div>
+          <div>
+            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Date d'ajout (jj/mm/aaaa)</label>
+            <input id="fDateAjout" placeholder="01/01/2026" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;margin-bottom:12px;cursor:pointer">
+          <input type="checkbox" id="fAvailable" /> En stock / disponible
+        </label>
+
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px">Notes des critiques</div>
+        <div id="adminNotesList"></div>
+        <button id="adminAddNoteBtn" style="width:100%;background:#0f172a;border:1px dashed #334155;color:#94a3b8;border-radius:8px;padding:7px;font-size:0.75rem;cursor:pointer;margin-bottom:14px">+ Ajouter une note</button>
+
+        <div style="display:flex;gap:8px">
+          <button id="adminSaveWineBtn" style="flex:1;background:#10b981;color:white;border:none;border-radius:8px;padding:9px;font-size:0.8rem;font-weight:600;cursor:pointer">Enregistrer</button>
+          <button id="adminDeleteWineBtn" style="background:#7f1d1d;color:#fecaca;border:none;border-radius:8px;padding:9px 12px;font-size:0.78rem;cursor:pointer">Supprimer</button>
+          <button id="adminCancelEditBtn" style="background:none;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:9px 12px;font-size:0.78rem;cursor:pointer">Annuler</button>
+        </div>
+      </div>
+
+      <p id="adminStatus" style="font-size:0.7rem;margin-top:10px;min-height:1.2em;text-align:center;color:#64748b"></p>
+    </div>
+
+    <p style="font-size:0.65rem;color:#475569;margin-top:14px;line-height:1.4;border-top:1px solid #334155;padding-top:8px">
       Raccourci : <kbd style="background:#0f172a;padding:1px 5px;border-radius:4px;font-family:monospace">Ctrl+Shift+A</kbd>
-      &nbsp;·&nbsp; Le token est sauvegardé localement.
     </p>
   </div>
+  </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

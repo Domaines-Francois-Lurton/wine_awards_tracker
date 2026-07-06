@@ -1,7 +1,15 @@
-'use strict';
+import { db, auth } from './firebase-config.js';
+import {
+  collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, setDoc,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+const ADMIN_EMAIL = 'admin@wine-awards-lurton.internal';
 
 // ── Admin : toggle stock feature ──────────────────────────────────────────────
-let stockFeatureEnabled = true; // valeur provisoire, écrasée par config.json au démarrage
+let stockFeatureEnabled = true; // valeur provisoire, écrasée par Firestore au démarrage
 
 function applyStockFeature() {
   const section = document.getElementById('filterAvailSection');
@@ -11,98 +19,6 @@ function applyStockFeature() {
     state.filters.avail.clear();
   }
   renderGrid();
-}
-
-const GITHUB_REPO  = 'Domaines-Francois-Lurton/wine_awards_tracker';
-const GITHUB_BRANCH = 'main';
-const CONFIG_PATH   = 'config.json';
-
-async function publishConfigToGitHub(token, showStock) {
-  const apiBase = `https://api.github.com/repos/${GITHUB_REPO}/contents/${CONFIG_PATH}`;
-  const headers = {
-    'Authorization': `Bearer ${token}`,
-    'Accept': 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-  };
-
-  // 1. Récupère le SHA actuel (absent si le fichier n'existe pas encore)
-  const getRes = await fetch(`${apiBase}?ref=${GITHUB_BRANCH}`, { headers });
-  if (!getRes.ok && getRes.status !== 404) {
-    throw new Error(`Erreur d'accès au repo (${getRes.status}) — vérifiez votre token.`);
-  }
-  const existing = getRes.ok ? await getRes.json() : null;
-  const sha = existing ? existing.sha : undefined;
-
-  // 2. Encode le nouveau contenu en base64
-  const content = btoa(JSON.stringify({ showStock }, null, 2) + '\n');
-
-  // 3. Crée ou met à jour le fichier
-  const body = { message: `admin: showStock=${showStock}`, content, branch: GITHUB_BRANCH };
-  if (sha) body.sha = sha;
-
-  const putRes = await fetch(apiBase, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify(body),
-  });
-  if (!putRes.ok) throw new Error(`Erreur lors de la publication (${putRes.status}).`);
-}
-
-function initAdminPanel() {
-  const panel    = document.getElementById('adminPanel');
-  const check    = document.getElementById('adminStockCheck');
-  const slider   = document.getElementById('adminStockSlider');
-  const knob     = document.getElementById('adminStockKnob');
-  const closeBtn = document.getElementById('adminClose');
-  const tokenInput = document.getElementById('adminToken');
-  const saveBtn  = document.getElementById('adminSave');
-  const status   = document.getElementById('adminStatus');
-
-  // Restaure le token sauvegardé
-  tokenInput.value = localStorage.getItem('wt-gh-token') || '';
-
-  function syncToggleUI() {
-    check.checked = stockFeatureEnabled;
-    slider.style.background = stockFeatureEnabled ? '#10b981' : '#334155';
-    knob.style.transform    = stockFeatureEnabled ? 'translateX(18px)' : 'translateX(0)';
-  }
-  syncToggleUI();
-
-  check.addEventListener('change', () => {
-    stockFeatureEnabled = check.checked;
-    syncToggleUI();
-    applyStockFeature();
-  });
-
-  saveBtn.addEventListener('click', async () => {
-    const token = tokenInput.value.trim();
-    if (!token) { status.textContent = 'Token manquant.'; status.style.color = '#f87171'; return; }
-
-    localStorage.setItem('wt-gh-token', token);
-    saveBtn.disabled = true;
-    status.style.color = '#94a3b8';
-    status.textContent = 'Publication en cours…';
-
-    try {
-      await publishConfigToGitHub(token, stockFeatureEnabled);
-      status.style.color = '#10b981';
-      status.textContent = 'Publié. Visible dans ~1 min.';
-    } catch (err) {
-      status.style.color = '#f87171';
-      status.textContent = err.message;
-    } finally {
-      saveBtn.disabled = false;
-    }
-  });
-
-  closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
-
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-      e.preventDefault();
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-  });
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -133,7 +49,6 @@ const COUNTRY_FLAG = { 'france': '🇫🇷', 'argentine': '🇦🇷', 'espagne':
 const T = {
   fr: {
     searchPlaceholder: 'Rechercher un vin, domaine, critique, note…',
-    exportBtn: 'Export CSV',
     pays: 'Pays',
     disponibilite: 'Disponibilité',
     couleur: 'Couleur',
@@ -165,7 +80,6 @@ const T = {
   },
   en: {
     searchPlaceholder: 'Search wine, estate, critic, score…',
-    exportBtn: 'Export CSV',
     pays: 'Country',
     disponibilite: 'Availability',
     couleur: 'Colour',
@@ -202,11 +116,6 @@ function t(key, ...args) {
   return typeof val === 'function' ? val(...args) : (val ?? key);
 }
 
-const META_COLS = new Set([
-  'Pays', 'Domaine ou Marque', 'Couleur', 'Nom du vin',
-  'Millésime', 'Available', 'Récap rapide pour email', 'date_ajout',
-]);
-
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
   wines: [],
@@ -225,60 +134,23 @@ const state = {
   modalIdx: null,
 };
 
-// ── CSV parser ────────────────────────────────────────────────────────────────
-// Auto-detects delimiter (comma or semicolon) and skips non-header rows
-// before the real header row (the one containing 'Pays').
-function parseCSV(text) {
-  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trimEnd();
-
-  // Detect delimiter from first non-empty line
-  const firstLine = t.split('\n').find(l => l.trim()) || '';
-  const sep = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
-
-  // Split a single line respecting quoted fields
-  function splitLine(line) {
-    const fields = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (inQ) {
-        if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
-        else if (c === '"') inQ = false;
-        else cur += c;
-      } else {
-        if (c === '"') inQ = true;
-        else if (c === sep) { fields.push(cur); cur = ''; }
-        else cur += c;
-      }
+// ── Firestore → shape attendue par le reste de l'app ──────────────────────────
+// Chaque document `wines/{id}` a des champs meta (Pays, Domaine ou Marque, ...)
+// et un tableau `notes` de { critic, score, comment }. On aplatit ce tableau en
+// clés `wine[critic] = score` (comme avant, une colonne par critique) et on
+// garde les commentaires + le tableau brut à part pour l'admin et la modale.
+function hydrateWine(id, data) {
+  const wine = { ...data };
+  wine._id = id;
+  wine._notes = Array.isArray(data.notes) ? data.notes : [];
+  wine._comments = {};
+  wine._notes.forEach(n => {
+    if (n.critic) {
+      wine[n.critic] = n.score || '';
+      if (n.comment) wine._comments[n.critic] = n.comment;
     }
-    fields.push(cur);
-    return fields;
-  }
-
-  const lines = t.split('\n');
-
-  // Find the actual header row — must contain 'Pays' and 'Nom du vin'
-  let headerIdx = -1;
-  for (let i = 0; i < Math.min(lines.length, 10); i++) {
-    if (lines[i].includes('Pays') && lines[i].includes('Nom du vin')) {
-      headerIdx = i;
-      break;
-    }
-  }
-  if (headerIdx === -1) return { headers: [], rows: [] };
-
-  const headers = splitLine(lines[headerIdx]).map(h => h.trim());
-
-  const rows = lines.slice(headerIdx + 1)
-    .filter(l => l.trim() && l.replace(/[;,]/g, '').trim()) // skip empty rows
-    .map(l => {
-      const vals = splitLine(l);
-      const obj = {};
-      headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
-      return obj;
-    });
-
-  return { headers, rows };
+  });
+  return wine;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -313,7 +185,7 @@ function extractScoreNum(val) {
 function getScores(wine) {
   return state.criticCols
     .map(col => ({ col, val: wine[col] }))
-    .filter(({ val }) => val !== '');
+    .filter(({ val }) => val !== undefined && val !== '');
 }
 
 // Returns only entries where a numeric score can be extracted, with the number
@@ -846,10 +718,11 @@ function openModal(idx) {
          const abbrev = CRITIC_ABBREV[col] || col;
          const num = parseFloat(val);
          const elite = !isNaN(num) && num > 96;
+         const comment = wine._comments && wine._comments[col];
          return `<div class="modal-score-row">
            <span class="modal-critic-name">${col} <span class="text-slate-400 text-xs">(${abbrev})</span></span>
            <span class="modal-score-val ${elite ? 'elite' : ''}">${val}</span>
-         </div>`;
+         </div>${comment ? `<div class="text-xs text-slate-400 italic mb-2" style="padding-left:2px">${comment}</div>` : ''}`;
        }).join('')}</div>`
     : `<div class="text-sm text-slate-400 italic">${t('aucuneNote')}.</div>`;
 
@@ -907,51 +780,296 @@ function showToast() {
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────
-function exportCSV() {
-  fetch('data.csv')
-    .then(r => r.blob())
-    .then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement('a'), { href: url, download: 'wine-awards-lurton.csv' });
-      a.click();
-      URL.revokeObjectURL(url);
+const EXPORT_META_COLS = ['Pays', 'Domaine ou Marque', 'Couleur', 'Nom du vin', 'Millésime', 'Available', 'date_ajout'];
+
+function buildExportRows() {
+  return state.wines.map(w => {
+    const row = {};
+    EXPORT_META_COLS.forEach(c => { row[c] = w[c] || ''; });
+    state.criticCols.forEach(c => { row[c] = w[c] || ''; });
+    row['Commentaires'] = Object.entries(w._comments || {})
+      .map(([critic, comment]) => `${CRITIC_ABBREV[critic] || critic}: ${comment}`)
+      .join(' | ');
+    return row;
+  });
+}
+
+function exportXLSX() {
+  const rows = buildExportRows();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Wine Awards');
+  XLSX.writeFile(wb, 'wine-awards-lurton.xlsx');
+}
+
+// ── Admin CRUD ────────────────────────────────────────────────────────────────
+const CRITIC_NAMES = Object.keys(CRITIC_ABBREV);
+let adminEditingId = null; // null = pas d'édition, 'new' = nouveau vin, sinon _id du vin édité
+let adminNotesDraft = [];  // notes en cours d'édition dans le formulaire
+
+async function reloadWines() {
+  const snap = await getDocs(collection(db, 'wines'));
+  state.wines = snap.docs.map(d => hydrateWine(d.id, d.data()));
+  state.criticCols = [...new Set(state.wines.flatMap(w => w._notes.map(n => n.critic)))];
+  computeKPIs(state.wines);
+  initFilters(state.wines);
+  renderRecentNotes(state.wines);
+  renderGrid();
+}
+
+function initAdminPanel() {
+  const panel       = document.getElementById('adminPanel');
+  const closeBtn    = document.getElementById('adminClose');
+  const loginView   = document.getElementById('adminLoginView');
+  const mainView    = document.getElementById('adminMainView');
+  const passwordIn  = document.getElementById('adminPassword');
+  const loginBtn    = document.getElementById('adminLoginBtn');
+  const loginStatus = document.getElementById('adminLoginStatus');
+  const logoutBtn   = document.getElementById('adminLogoutBtn');
+  const check       = document.getElementById('adminStockCheck');
+  const slider      = document.getElementById('adminStockSlider');
+  const knob        = document.getElementById('adminStockKnob');
+  const addWineBtn  = document.getElementById('adminAddWineBtn');
+  const searchIn    = document.getElementById('adminWineSearch');
+  const listEl      = document.getElementById('adminWineList');
+  const formEl      = document.getElementById('adminEditForm');
+  const notesListEl = document.getElementById('adminNotesList');
+  const addNoteBtn  = document.getElementById('adminAddNoteBtn');
+  const saveBtn     = document.getElementById('adminSaveWineBtn');
+  const deleteBtn   = document.getElementById('adminDeleteWineBtn');
+  const cancelBtn   = document.getElementById('adminCancelEditBtn');
+  const status      = document.getElementById('adminStatus');
+
+  function syncToggleUI() {
+    check.checked = stockFeatureEnabled;
+    slider.style.background = stockFeatureEnabled ? '#10b981' : '#334155';
+    knob.style.transform    = stockFeatureEnabled ? 'translateX(18px)' : 'translateX(0)';
+  }
+  syncToggleUI();
+
+  check.addEventListener('change', async () => {
+    stockFeatureEnabled = check.checked;
+    syncToggleUI();
+    applyStockFeature();
+    try {
+      await setDoc(doc(db, 'config', 'site'), { showStock: stockFeatureEnabled }, { merge: true });
+    } catch {
+      status.style.color = '#f87171';
+      status.textContent = 'Erreur de sauvegarde du réglage stock.';
+    }
+  });
+
+  function showLoggedIn() {
+    loginView.style.display = 'none';
+    mainView.style.display = 'block';
+    renderAdminWineList();
+  }
+  function showLoggedOut() {
+    loginView.style.display = 'block';
+    mainView.style.display = 'none';
+    formEl.style.display = 'none';
+    adminEditingId = null;
+  }
+
+  onAuthStateChanged(auth, user => {
+    if (user && user.email === ADMIN_EMAIL) showLoggedIn();
+    else showLoggedOut();
+  });
+
+  loginBtn.addEventListener('click', async () => {
+    const pwd = passwordIn.value;
+    if (!pwd) { loginStatus.style.color = '#f87171'; loginStatus.textContent = 'Mot de passe requis.'; return; }
+    loginBtn.disabled = true;
+    loginStatus.style.color = '#94a3b8';
+    loginStatus.textContent = 'Connexion…';
+    try {
+      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pwd);
+      passwordIn.value = '';
+      loginStatus.textContent = '';
+    } catch {
+      loginStatus.style.color = '#f87171';
+      loginStatus.textContent = 'Mot de passe incorrect.';
+    } finally {
+      loginBtn.disabled = false;
+    }
+  });
+  passwordIn.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+  logoutBtn.addEventListener('click', () => signOut(auth));
+
+  function renderAdminWineList() {
+    const tokens = norm(searchIn.value).split(/\s+/).filter(Boolean);
+    const filtered = state.wines
+      .filter(w => {
+        if (!tokens.length) return true;
+        const hay = norm(`${w['Domaine ou Marque']} ${w['Nom du vin']} ${w['Millésime']}`);
+        return tokens.every(tok => hay.includes(tok));
+      })
+      .sort((a, b) => (+b['Millésime'] || 0) - (+a['Millésime'] || 0));
+    listEl.innerHTML = filtered.map(w => `
+      <div class="admin-wine-row" data-id="${w._id}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #334155;cursor:pointer;font-size:0.78rem">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(w['Domaine ou Marque'] || '').trim()} — ${w['Nom du vin'] || ''} (${w['Millésime'] || '—'})</span>
+      </div>`).join('') || '<div style="padding:10px;font-size:0.75rem;color:#64748b">Aucun vin.</div>';
+
+    listEl.querySelectorAll('.admin-wine-row').forEach(row => {
+      row.addEventListener('click', () => openEditForm(row.dataset.id));
     });
+  }
+  searchIn.addEventListener('input', renderAdminWineList);
+
+  function noteRowHTML(note, i) {
+    const options = CRITIC_NAMES.map(c => `<option value="${c}" ${c === note.critic ? 'selected' : ''}>${c}</option>`).join('');
+    return `
+      <div class="admin-note-row" data-i="${i}" style="border:1px solid #334155;border-radius:8px;padding:8px;margin-bottom:8px">
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <select class="note-critic" style="flex:2;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px">${options}</select>
+          <input class="note-score" value="${note.score || ''}" placeholder="Note (ex. 93)" style="flex:1;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px" />
+          <button class="note-delete" title="Supprimer" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px">✕</button>
+        </div>
+        <textarea class="note-comment" placeholder="Commentaire de dégustation (optionnel)" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px;min-height:44px">${note.comment || ''}</textarea>
+      </div>`;
+  }
+
+  function renderNotesDraft() {
+    notesListEl.innerHTML = adminNotesDraft.map(noteRowHTML).join('') || '<p style="font-size:0.72rem;color:#64748b">Aucune note.</p>';
+    notesListEl.querySelectorAll('.admin-note-row').forEach(row => {
+      const i = +row.dataset.i;
+      row.querySelector('.note-critic').addEventListener('change', e => { adminNotesDraft[i].critic = e.target.value; });
+      row.querySelector('.note-score').addEventListener('input', e => { adminNotesDraft[i].score = e.target.value; });
+      row.querySelector('.note-comment').addEventListener('input', e => { adminNotesDraft[i].comment = e.target.value; });
+      row.querySelector('.note-delete').addEventListener('click', () => {
+        adminNotesDraft.splice(i, 1);
+        renderNotesDraft();
+      });
+    });
+  }
+
+  addNoteBtn.addEventListener('click', () => {
+    adminNotesDraft.push({ critic: CRITIC_NAMES[0], score: '', comment: '' });
+    renderNotesDraft();
+  });
+
+  function fillForm(wine) {
+    document.getElementById('fPays').value = norm(wine?.['Pays'] || 'france');
+    document.getElementById('fDomaine').value = wine?.['Domaine ou Marque'] || '';
+    document.getElementById('fCouleur').value = norm(wine?.['Couleur'] || 'rouge');
+    document.getElementById('fNom').value = wine?.['Nom du vin'] || '';
+    document.getElementById('fMillesime').value = wine?.['Millésime'] || '';
+    document.getElementById('fAvailable').checked = isInStock(wine || {});
+    document.getElementById('fDateAjout').value = wine?.['date_ajout'] || '';
+    adminNotesDraft = (wine?._notes || []).map(n => ({ ...n }));
+    renderNotesDraft();
+  }
+
+  function openEditForm(id) {
+    adminEditingId = id;
+    const wine = state.wines.find(w => w._id === id);
+    fillForm(wine);
+    formEl.style.display = 'block';
+    deleteBtn.style.display = 'inline-block';
+    status.textContent = '';
+  }
+
+  addWineBtn.addEventListener('click', () => {
+    adminEditingId = 'new';
+    fillForm(null);
+    formEl.style.display = 'block';
+    deleteBtn.style.display = 'none';
+    status.textContent = '';
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    formEl.style.display = 'none';
+    adminEditingId = null;
+  });
+
+  function readForm() {
+    const paysMap = { france: 'France', argentine: 'Argentine', espagne: 'Espagne', chili: 'Chili' };
+    const couleurMap = { rouge: 'Rouge', blanc: 'Blanc', 'rosé': 'Rosé', autre: 'Autre' };
+    return {
+      'Pays': paysMap[document.getElementById('fPays').value] || '',
+      'Domaine ou Marque': document.getElementById('fDomaine').value.trim(),
+      'Couleur': couleurMap[document.getElementById('fCouleur').value] || '',
+      'Nom du vin': document.getElementById('fNom').value.trim(),
+      'Millésime': document.getElementById('fMillesime').value.trim(),
+      'Available': document.getElementById('fAvailable').checked ? 'x' : '',
+      'date_ajout': document.getElementById('fDateAjout').value.trim(),
+      notes: adminNotesDraft
+        .filter(n => n.critic && n.score)
+        .map(n => ({ critic: n.critic, score: n.score.trim(), comment: (n.comment || '').trim() })),
+    };
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    const data = readForm();
+    if (!data['Nom du vin']) { status.style.color = '#f87171'; status.textContent = 'Le nom du vin est requis.'; return; }
+    saveBtn.disabled = true;
+    status.style.color = '#94a3b8';
+    status.textContent = 'Enregistrement…';
+    try {
+      if (adminEditingId === 'new') {
+        await addDoc(collection(db, 'wines'), data);
+      } else {
+        await updateDoc(doc(db, 'wines', adminEditingId), data);
+      }
+      await reloadWines();
+      renderAdminWineList();
+      formEl.style.display = 'none';
+      adminEditingId = null;
+      status.style.color = '#10b981';
+      status.textContent = 'Enregistré.';
+    } catch (err) {
+      status.style.color = '#f87171';
+      status.textContent = 'Erreur : ' + err.message;
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    if (adminEditingId === 'new' || !adminEditingId) return;
+    if (!confirm('Supprimer définitivement ce vin ?')) return;
+    try {
+      await deleteDoc(doc(db, 'wines', adminEditingId));
+      await reloadWines();
+      renderAdminWineList();
+      formEl.style.display = 'none';
+      adminEditingId = null;
+    } catch (err) {
+      status.style.color = '#f87171';
+      status.textContent = 'Erreur : ' + err.message;
+    }
+  });
+
+  closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      e.preventDefault();
+      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    }
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Charge config.json pour l'état global du stock (visible par tous)
+  // Charge config/site pour l'état global du stock (visible par tous)
   try {
-    const cfg = await fetch('config.json');
-    if (cfg.ok) {
-      const json = await cfg.json();
-      if (typeof json.showStock === 'boolean') stockFeatureEnabled = json.showStock;
+    const cfgSnap = await getDoc(doc(db, 'config', 'site'));
+    if (cfgSnap.exists() && typeof cfgSnap.data().showStock === 'boolean') {
+      stockFeatureEnabled = cfgSnap.data().showStock;
     }
-  } catch { /* config.json absent ou invalide : on garde la valeur par défaut */ }
+  } catch { /* config absente ou invalide : on garde la valeur par défaut */ }
 
-  let text;
   try {
-    const res = await fetch('data.csv');
-    if (!res.ok) throw new Error();
-    text = await res.text();
+    const snap = await getDocs(collection(db, 'wines'));
+    state.wines = snap.docs.map(d => hydrateWine(d.id, d.data()));
+    state.criticCols = [...new Set(state.wines.flatMap(w => w._notes.map(n => n.critic)))];
   } catch {
     document.getElementById('wineGrid').innerHTML =
-      '<div class="col-span-full text-red-400 text-sm py-12 text-center">Impossible de charger data.csv.</div>';
+      '<div class="col-span-full text-red-400 text-sm py-12 text-center">Impossible de charger les données.</div>';
     return;
   }
-
-  const { headers, rows } = parseCSV(text);
-  // Exclut les colonnes meta + toute colonne contenant "recap" ou "email" (insensible à la casse)
-  const isMetaCol = h => {
-    if (!h || h === '') return true;
-    if (META_COLS.has(h)) return true;
-    const hn = h.toLowerCase().replace(/\s+/g, '');
-    return hn.includes('recap') || hn.includes('email') || hn.includes('récap');
-  };
-  state.criticCols = headers.filter(h => !isMetaCol(h));
-  // Filtre strict : seuls les pays connus sont acceptés (évite les lignes décalées ou corrompues)
-  const VALID_PAYS = new Set(['france', 'argentine', 'espagne', 'chili']);
-  state.wines = rows.filter(w => VALID_PAYS.has((w['Pays'] || '').trim().toLowerCase()));
 
   computeKPIs(state.wines);
   initFilters(state.wines);
@@ -996,7 +1114,13 @@ async function init() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   // Export
-  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('exportXlsxBtn').addEventListener('click', exportXLSX);
+
+  // Admin panel entry point
+  document.getElementById('adminBtn').addEventListener('click', () => {
+    const panel = document.getElementById('adminPanel');
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  });
 
   // ── Lang toggle ───────────────────────────────────────────────────────────
   document.getElementById('langFr')?.addEventListener('click', () => setLang('fr'));
@@ -1107,4 +1231,5 @@ function setLang(lang) {
   applyLang();
 }
 
+window.loadMoreCards = loadMoreCards;
 document.addEventListener('DOMContentLoaded', init);
