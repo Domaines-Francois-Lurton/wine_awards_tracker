@@ -1,355 +1,192 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="icon" href="favicon.ico" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wine Awards Tracker - Domaines François Lurton</title>
-  <meta name="description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines — critics worldwide." />
-
-  <!-- Open Graph -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://domaines-francois-lurton.github.io/wine_awards_tracker/" />
-  <meta property="og:title"       content="Wine Awards Tracker - Domaines François Lurton" />
-  <meta property="og:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines — critics worldwide." />
-  <meta property="og:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
-
-  <!-- Twitter / X Card -->
-  <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="Wine Awards Tracker - Domaines François Lurton" />
-  <meta name="twitter:description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines." />
-  <meta name="twitter:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Press Tracker — Suivi des envois presse</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body class="text-slate-900 min-h-screen" style="background-color:#F7F6F4">
+<body>
 
-  <!-- ── HEADER ── -->
-  <header class="bg-white border-b border-slate-100 sticky top-0 z-40" style="height:72px">
-    <div class="h-full flex items-center">
+<!-- CONFIGURATION -->
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBnc5x5WCVl-n_yLsoi9bRNOrsnNm8ziLU",
+    authDomain: "press-tracker-dfl.firebaseapp.com",
+    projectId: "press-tracker-dfl",
+    storageBucket: "press-tracker-dfl.firebasestorage.app",
+    messagingSenderId: "938062044902",
+    appId: "1:938062044902:web:f35c3d8948ea982d48e527",
+    measurementId: "G-WSXHYTKGQY"
+  };
+  const APP_PASSWORD = "flurton";
+</script>
 
-      <!-- Zone logo — largeur sidebar, padding vertical pour respiration -->
-      <div class="flex-shrink-0 w-16 lg:w-64 flex items-center justify-center border-r border-slate-100 h-full" style="padding: 12px 20px">
-        <button id="sidebarToggle" class="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
-        <img src="logo.svg" alt="Domaines François Lurton" class="hidden lg:block w-full h-auto object-contain" style="max-height:44px" />
-      </div>
-
-      <!-- Search — alignée à gauche, prend tout l'espace, très visible -->
-      <div class="flex-1 flex items-center px-5 sm:px-8">
-        <div class="relative w-full">
-          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-          </svg>
-          <input id="searchInput" type="text" placeholder="Rechercher un vin, domaine, critique, note…"
-            class="w-full border-2 border-slate-200 rounded-xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:border-slate-900 bg-white placeholder-slate-400 transition-colors" />
-        </div>
-      </div>
-
-      <!-- Lang toggle + Export -->
-      <div class="flex-shrink-0 pr-5 flex items-center gap-2">
-        <!-- FR / EN -->
-        <div class="flex rounded-lg border border-slate-200 overflow-hidden bg-white text-xs font-bold">
-          <button id="langFr" class="lang-btn px-2.5 py-1.5">FR</button>
-          <button id="langEn" class="lang-btn px-2.5 py-1.5 border-l border-slate-200">EN</button>
-        </div>
-        <button id="exportXlsxBtn"
-          class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          <span class="hidden sm:inline">XLSX</span>
-        </button>
-        <button id="adminBtn" title="Administration"
-          class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-          <span class="hidden sm:inline">Admin</span>
-        </button>
-      </div>
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">🍷</div>
+    <div class="login-title">Press Tracker</div>
+    <div class="login-sub">Suivi des envois presse</div>
+    <div class="login-error" id="loginError">Mot de passe incorrect.</div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="pwdInput" placeholder="••••••••" autocomplete="current-password">
     </div>
-  </header>
-
-  <!-- ── SIDEBAR OVERLAY (mobile) ── -->
-  <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
-
-  <!-- ── APP LAYOUT ── -->
-  <div class="flex h-[calc(100vh-72px)]">
-
-    <!-- ── SIDEBAR ── -->
-    <aside id="sidebar"
-      class="w-64 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col overflow-hidden h-[calc(100vh-72px)]">
-
-      <!-- Sections fixes -->
-      <div class="px-4 pt-4 space-y-3 flex-shrink-0">
-
-        <div>
-          <p class="filter-section-title" data-i18n="pays">Pays</p>
-          <div class="mt-2 space-y-0.5" id="filterPays"></div>
-        </div>
-
-        <div id="filterAvailSection">
-          <p class="filter-section-title" data-i18n="disponibilite">Disponibilité</p>
-          <div class="mt-2 space-y-1" id="filterAvail"></div>
-        </div>
-
-        <div>
-          <p class="filter-section-title" data-i18n="couleur">Couleur</p>
-          <div class="mt-2 space-y-1" id="filterCouleur"></div>
-        </div>
-
-      </div>
-
-      <!-- Domaine — flex-1 sur desktop, normal sur mobile -->
-      <div class="sidebar-domaine-section px-4 mt-3">
-        <p class="filter-section-title" data-i18n="domaine">Domaine</p>
-        <div class="mt-2 space-y-1 scrollbar-hide" id="filterDomaine"></div>
-      </div>
-
-      <!-- Score — toujours visible en bas (sticky) -->
-      <div class="sidebar-score px-4 py-4 border-t border-slate-100">
-        <p class="filter-section-title" data-i18n="scoreMin">Score minimum</p>
-        <div class="mt-2 grid grid-cols-2 gap-1.5">
-          <button class="score-btn active" data-score="0" data-i18n="tous">Tous</button>
-          <button class="score-btn" data-score="90">90+</button>
-          <button class="score-btn" data-score="92">92+</button>
-          <button class="score-btn" data-score="95">95+</button>
-        </div>
-        <div style="text-align:right;margin-top:10px;font-size:0.58rem;color:#cbd5e1;letter-spacing:0.05em">v1.5</div>
-      </div>
-
-    </aside>
-
-    <!-- ── MAIN ── -->
-    <main class="flex-1 overflow-y-auto min-w-0">
-
-      <!-- KPIs masqués (éléments conservés pour le JS) -->
-      <div style="display:none">
-        <div id="kpiTotal"></div><div id="kpiNoted"></div>
-        <div id="kpiAvg"></div><div id="kpiElite"></div>
-      </div>
-
-      <!-- Dernières notes -->
-      <div class="px-4 sm:px-6 pt-5 pb-4">
-        <p class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-3 flex items-center gap-1.5">
-          <span class="text-amber-400">★</span> <span id="recentNotesTitle">Dernières notes reçues</span>
-        </p>
-        <div id="recentNotes" class="flex gap-3 overflow-x-auto pb-1 scrollbar-hide"></div>
-      </div>
-
-      <!-- Multi-select bar -->
-      <div id="multiBar" class="mx-3 sm:mx-6 mb-4 hidden">
-        <div class="bg-slate-900 rounded-xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0"></span>
-            <span id="multiCount" class="text-xs sm:text-sm font-medium text-white truncate"></span>
-          </div>
-          <button id="multiCopy"
-            class="flex-shrink-0 bg-white text-slate-900 text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-2">
-            <svg width="13" height="13" viewBox="0 0 115.77 122.88" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M89.62,13.96v7.73h12.19v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v73.29h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02H40.1v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02V92.51H13.96v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1C1.6,85.88,0.04,82.41,0.03,78.57H0V13.96h0.02C0.03,10.11,1.6,6.62,4.12,4.1C6.63,1.6,10.1,0.04,13.94,0.03V0h61.72v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96zM79.04,21.69v-7.73h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02H13.96v-0.02c-0.91,0-1.75,0.39-2.37,1.01c-0.61,0.61-1,1.46-1,2.37h0.02v64.62h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h12.19V35.65h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02H79.04zM105.18,108.92V35.65h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02H40.1v-0.02c-0.91,0-1.75,0.39-2.37,1.01c-0.61,0.61-1,1.46-1,2.37h0.02v73.29h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h61.72v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02z"/></svg>
-            <span class="hidden sm:inline">Copier</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Grid header -->
-      <div class="px-4 sm:px-6 flex items-center justify-between mb-3 gap-3">
-        <p id="resultCount" class="text-xs font-semibold text-slate-500 uppercase tracking-widest flex-shrink-0"></p>
-        <div class="flex items-center gap-2">
-          <!-- Toggle vue — masqué mobile -->
-          <div class="hidden sm:flex rounded-lg border border-slate-200 overflow-hidden bg-white">
-            <button id="viewGrid" class="view-btn active px-2.5 py-1.5" title="Vignettes">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-              </svg>
-            </button>
-            <button id="viewList" class="view-btn px-2.5 py-1.5 border-l border-slate-200" title="Liste">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-              </svg>
-            </button>
-          </div>
-          <select id="sortSelect" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400">
-            <option value="score">Meilleur score</option>
-            <option value="name">Nom A–Z</option>
-            <option value="domaine">Domaine A–Z</option>
-            <option value="millesime">Millésime ↓</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Grid / List container -->
-      <div id="wineGrid" class="px-4 sm:px-6 pb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        <div class="col-span-full text-sm text-slate-400 py-16 text-center">Chargement…</div>
-      </div>
-    </main>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" id="btnLogin">Connexion</button>
   </div>
+</div>
 
-  <!-- ── MODAL ── -->
-  <div id="modalOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-6" style="display:none">
-    <div id="modalBox" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
-      <div id="modalHeader" class="border-l-4 px-5 sm:px-6 pt-5 sm:pt-6 pb-4 flex-shrink-0">
-        <div class="flex items-start justify-between">
-          <div>
-            <div id="modalDomaine" class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-1"></div>
-            <div id="modalNom" class="text-lg sm:text-xl font-bold text-slate-900"></div>
-            <div id="modalMeta" class="text-sm text-slate-500 mt-0.5"></div>
-          </div>
-          <button id="modalClose" class="ml-3 flex-shrink-0 text-slate-400 hover:text-slate-900 transition-colors mt-1">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="overflow-y-auto px-5 sm:px-6 pb-6 flex-1">
-        <div id="modalScores" class="mt-4"></div>
-        <div id="modalRecap" class="mt-5 pt-4 border-t border-slate-100"></div>
-      </div>
-      <div class="px-5 sm:px-6 py-4 border-t border-slate-100 flex-shrink-0 flex items-center justify-between bg-gray-50 rounded-b-2xl">
-        <div id="modalStock"></div>
-        <button id="modalCopyBtn"
-          class="flex items-center gap-2 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3"/>
-          </svg>
-          Copier les notes
-        </button>
-      </div>
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text-muted)">Chargement des données...</div>
+</div>
+
+<!-- APP -->
+<div class="app" id="theApp">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">🍷</span>
+      <span class="topbar-title">Press Tracker</span>
+      <span style="font-size:10px;color:#ffffff55;font-weight:400;letter-spacing:.03em">v1.0</span>
+    </div>
+    <div class="topbar-right">
+      <span style="display:flex;align-items:center;gap:2px;margin-right:4px">
+        <button id="btnLangFr" class="btn btn-sm" style="color:#fff;border-color:#ffffff44;padding:3px 7px;font-size:12px;font-weight:700;opacity:1" onclick="setLang('fr')">FR</button>
+        <button id="btnLangEs" class="btn btn-sm" style="color:#fff;border-color:#ffffff44;padding:3px 7px;font-size:12px;font-weight:400;opacity:0.45" onclick="setLang('es')">ES</button>
+      </span>
+      <button class="btn btn-sm" style="color:#fff;border-color:#ffffff44;padding:4px 10px;font-size:13px" onclick="openHelpModal()" title="Aide">?</button>
+      <button class="btn btn-sm" style="color:#fff;border-color:#ffffff44" id="btnLogout">Déconnexion</button>
     </div>
   </div>
 
-  <!-- TOAST -->
-  <div id="toast"
-    class="fixed bottom-6 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300 z-50 pointer-events-none flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-xl"
-    style="background:#0f172a;color:white;border-top:2px solid #10b981;box-shadow:0 8px 32px rgba(0,0,0,0.25),0 2px 8px rgba(16,185,129,0.2);white-space:nowrap">
-    <div style="width:22px;height:22px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    </div>
-    <span style="font-size:0.72rem;font-weight:600;letter-spacing:0.01em">Copié dans le presse-papiers</span>
+  <div class="nav" id="desktopNav">
+    <div class="nav-tab active" data-page="tracker">📋 Tracker</div>
+    <div class="nav-tab" data-page="catalogue">🍷 Catalogue</div>
+    <div class="nav-tab" data-page="alerts">⚠️ Alertes <span id="alert-badge" style="background:var(--amber-bg);color:var(--amber-text);border-radius:20px;padding:1px 6px;font-size:11px;margin-left:4px;display:none"></span></div>
   </div>
 
-  <!-- ── PANNEAU ADMIN CACHÉ (Ctrl+Shift+A) ── -->
-  <div id="adminPanel" style="
-    display:none; position:fixed; inset:0; z-index:9999;
-    background:rgba(15,23,42,0.6); align-items:center; justify-content:center;">
-  <div style="
-    background:#1e293b; color:#f8fafc; border-radius:16px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.4); padding:20px 24px; width:640px; max-width:92vw;
-    max-height:85vh; overflow-y:auto;
-    font-family:inherit; border:1px solid #334155;">
+  <div class="mobile-nav" id="mobileNav">
+    <div class="nav-tab active" data-page="tracker"><span class="nav-icon">📋</span>Tracker</div>
+    <div class="nav-tab" data-page="catalogue"><span class="nav-icon">🍷</span>Catalogue</div>
+    <div class="nav-tab" data-page="alerts"><span class="nav-icon nav-alert-icon">⚠️<span id="alert-badge-m" class="nav-badge-m"></span></span>Alertes</div>
+  </div>
 
-    <!-- Titre -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07 10 10 0 0 1 19.07 4.93z"/></svg>
-      <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8">Admin</span>
-      <button id="adminClose" style="margin-left:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;line-height:1;padding:0" title="Fermer">✕</button>
-    </div>
+  <div class="main">
 
-    <!-- Vue connexion -->
-    <div id="adminLoginView">
-      <label style="font-size:0.68rem;color:#94a3b8;display:block;margin-bottom:4px">Mot de passe administrateur</label>
-      <input id="adminPassword" type="password" placeholder="••••••••"
-        style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:8px;
-               color:#f8fafc;font-size:0.8rem;padding:8px 10px;outline:none" />
-      <button id="adminLoginBtn" style="
-        width:100%;margin-top:10px;background:#10b981;color:white;border:none;border-radius:8px;
-        padding:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s">
-        Se connecter
-      </button>
-      <p id="adminLoginStatus" style="font-size:0.68rem;margin-top:8px;min-height:1.2em;text-align:center;color:#64748b"></p>
-    </div>
-
-    <!-- Vue admin (après connexion) -->
-    <div id="adminMainView" style="display:none">
-
-      <!-- Toggle stock -->
-      <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin-bottom:14px">
-        <span style="font-size:0.82rem;font-weight:500">Afficher stock / dispo</span>
-        <span style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
-          <input type="checkbox" id="adminStockCheck" style="opacity:0;width:0;height:0;position:absolute">
-          <span id="adminStockSlider" style="position:absolute;inset:0;border-radius:22px;transition:background 0.2s;background:#334155"></span>
-          <span id="adminStockKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
-        </span>
-      </label>
-
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button id="adminAddWineBtn" style="flex:1;background:#334155;color:#f8fafc;border:none;border-radius:8px;padding:8px;font-size:0.78rem;font-weight:600;cursor:pointer">+ Ajouter un vin</button>
-        <button id="adminLogoutBtn" style="background:none;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:8px 12px;font-size:0.78rem;cursor:pointer">Déconnexion</button>
-      </div>
-
-      <input id="adminWineSearch" placeholder="Rechercher un vin…"
-        style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:8px;
-               color:#f8fafc;font-size:0.78rem;padding:7px 10px;outline:none;margin-bottom:8px" />
-      <div id="adminWineList" style="max-height:220px;overflow-y:auto;border:1px solid #334155;border-radius:8px;margin-bottom:14px"></div>
-
-      <!-- Formulaire d'édition -->
-      <div id="adminEditForm" style="display:none;border-top:1px solid #334155;padding-top:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Pays</label>
-            <select id="fPays" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px">
-              <option value="france">France</option>
-              <option value="argentine">Argentine</option>
-              <option value="espagne">Espagne</option>
-              <option value="chili">Chili</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Couleur</label>
-            <select id="fCouleur" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px">
-              <option value="rouge">Rouge</option>
-              <option value="blanc">Blanc</option>
-              <option value="rosé">Rosé</option>
-              <option value="autre">Autre</option>
-            </select>
-          </div>
-        </div>
-        <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Domaine ou marque</label>
-        <input id="fDomaine" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
-        <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Nom du vin</label>
-        <input id="fNom" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Millésime</label>
-            <input id="fMillesime" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
-          </div>
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Date d'ajout (jj/mm/aaaa)</label>
-            <input id="fDateAjout" placeholder="01/01/2026" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
-          </div>
-        </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;margin-bottom:12px;cursor:pointer">
-          <input type="checkbox" id="fAvailable" /> En stock / disponible
-        </label>
-
-        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px">Notes des critiques</div>
-        <div id="adminNotesList"></div>
-        <button id="adminAddNoteBtn" style="width:100%;background:#0f172a;border:1px dashed #334155;color:#94a3b8;border-radius:8px;padding:7px;font-size:0.75rem;cursor:pointer;margin-bottom:14px">+ Ajouter une note</button>
-
+    <!-- TRACKER PAGE -->
+    <div class="page active" id="page-tracker">
+      <div class="page-header">
+        <div class="page-title">Envois presse</div>
         <div style="display:flex;gap:8px">
-          <button id="adminSaveWineBtn" style="flex:1;background:#10b981;color:white;border:none;border-radius:8px;padding:9px;font-size:0.8rem;font-weight:600;cursor:pointer">Enregistrer</button>
-          <button id="adminDeleteWineBtn" style="background:#7f1d1d;color:#fecaca;border:none;border-radius:8px;padding:9px 12px;font-size:0.78rem;cursor:pointer">Supprimer</button>
-          <button id="adminCancelEditBtn" style="background:none;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:9px 12px;font-size:0.78rem;cursor:pointer">Annuler</button>
+          <button class="btn" id="btnExport">⬇ Export CSV</button>
+          <button class="btn" id="btnExportXlsx">⬇ Export Excel</button>
+          <button class="btn btn-primary" id="btnNewShipment">+ Nouvel envoi</button>
         </div>
       </div>
-
-      <p id="adminStatus" style="font-size:0.7rem;margin-top:10px;min-height:1.2em;text-align:center;color:#64748b"></p>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Vins suivis</div><div class="stat-val" id="statVins">—</div></div>
+        <div class="stat-card"><div class="stat-label">Envois</div><div class="stat-val" id="statEnvois">—</div></div>
+        <div class="stat-card"><div class="stat-label">Notes reçues</div><div class="stat-val" id="statNotes">—</div></div>
+        <div class="stat-card"><div class="stat-label" style="color:var(--amber-text)">⚠ Deadlines proches</div><div class="stat-val" id="statAlerts">—</div></div>
+      </div>
+      <div class="tracker-toolbar">
+        <input class="search-input" type="text" placeholder="Rechercher un vin..." id="trackerSearch">
+        <select class="filter-select" id="filterPays"><option value="">Tous les pays</option></select>
+        <select class="filter-select" id="filterRevue"><option value="">Toutes les revues</option></select>
+        <select class="filter-select" id="filterStatut">
+          <option value="">Tous statuts</option>
+          <option value="noté">Noté</option>
+          <option value="reçu">Reçu</option>
+          <option value="envoyé">Envoyé</option>
+          <option value="soumis">Soumis</option>
+          <option value="pending">En attente</option>
+        </select>
+        <select class="filter-select" id="filterTrimestre">
+          <option value="">Tous trimestres</option>
+          <option value="Q1">Q1</option>
+          <option value="Q2">Q2</option>
+          <option value="Q3">Q3</option>
+          <option value="Q4">Q4</option>
+        </select>
+        <button class="btn" id="btnResetTracker">↺ Réinitialiser</button>
+        <div class="view-toggle">
+          <button class="vbtn active" id="vbtnTable">▤</button>
+          <button class="vbtn" id="vbtnCard">⊞</button>
+        </div>
+      </div>
+      <div id="trackerContent"></div>
     </div>
 
-    <p style="font-size:0.65rem;color:#475569;margin-top:14px;line-height:1.4;border-top:1px solid #334155;padding-top:8px">
-      Raccourci : <kbd style="background:#0f172a;padding:1px 5px;border-radius:4px;font-family:monospace">Ctrl+Shift+A</kbd>
-    </p>
-  </div>
-  </div>
+    <!-- CATALOGUE PAGE -->
+    <div class="page" id="page-catalogue">
+      <div class="page-header">
+        <div class="page-title">Catalogue des vins</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-danger" id="btnDeleteSelected" style="display:none" onclick="deleteSelectedWines()">Supprimer (0)</button>
+          <button class="btn" id="btnTagSelected" style="display:none" onclick="openTagModal()">Taguer (0)</button>
+          <button class="btn" id="btnPaste">📋 Import bloc</button>
+          <button class="btn btn-primary" id="btnAddWine">+ Ajouter un vin</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tracker-toolbar" style="margin-bottom:0.75rem">
+          <input class="search-input" type="text" placeholder="Rechercher..." id="catSearch">
+          <select class="filter-select" id="catFilterPays"><option value="">Tous les pays</option></select>
+          <select class="filter-select" id="catFilterCouleur">
+            <option value="">Toutes couleurs</option>
+            <option>Rouge</option><option>Blanc</option><option>Rosé</option><option>Orange</option>
+          </select>
+          <select class="filter-select" id="catFilterSent">
+            <option value="">Tous</option>
+            <option value="none">Non soumis</option>
+            <option value="any">Soumis</option>
+          </select>
+          <select class="filter-select" id="catFilterTrimestre">
+            <option value="">Tous trimestres</option>
+            <option value="Q1">Q1 (Jan–Mars)</option>
+            <option value="Q2">Q2 (Avr–Juin)</option>
+            <option value="Q3">Q3 (Juil–Sept)</option>
+            <option value="Q4">Q4 (Oct–Déc)</option>
+          </select>
+          <button class="btn" id="btnResetCatalogue">↺ Réinitialiser</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="cat-table">
+            <thead>
+              <tr><th style="width:32px"><input type="checkbox" id="catSelectAll" onclick="toggleSelectAll()"></th><th style="width:78px">Pays</th><th style="width:138px">Domaine / Marque</th><th style="width:188px">Dénomination</th><th style="width:72px">Couleur</th><th style="width:68px">Millésime</th><th style="width:116px">Cépage</th><th style="width:72px">MAD</th><th style="width:52px">Trim.</th><th style="width:58px">Envois</th><th style="width:76px">Ajouté</th><th style="width:95px"></th></tr>
+            </thead>
+            <tbody id="catTableBody"></tbody>
+          </table>
+        </div>
+        <div id="catEmpty" class="empty" style="display:none">Aucun vin dans le catalogue.</div>
+      </div>
+    </div>
 
-  <script type="module" src="app.js"></script>
+    <!-- ALERTS PAGE -->
+    <div class="page" id="page-alerts">
+      <div class="page-header">
+        <div class="page-title">Vins à envoyer</div>
+      </div>
+      <div id="alertsLegend"></div>
+      <div class="card" style="padding:0">
+        <div id="alertsList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- XLSX EXPORT -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
