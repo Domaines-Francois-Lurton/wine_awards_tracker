@@ -10,6 +10,8 @@ const ADMIN_EMAIL = 'admin@wine-awards-lurton.internal';
 
 // ── Admin : toggle stock feature ──────────────────────────────────────────────
 let stockFeatureEnabled = true; // valeur provisoire, écrasée par Firestore au démarrage
+let isAdmin = false;
+let openAdminEditForm = null;
 
 function applyStockFeature() {
   const section = document.getElementById('filterAvailSection');
@@ -44,6 +46,7 @@ const CRITIC_ABBREV = {
 
 const COUNTRY_CODE = { 'france': 'FR', 'argentine': 'AR', 'espagne': 'ES', 'chili': 'CL' };
 const COUNTRY_FLAG = { 'france': '🇫🇷', 'argentine': '🇦🇷', 'espagne': '🇪🇸', 'chili': '🇨🇱' };
+const ICON_PENCIL_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.232 5.232l3.536 3.536M9 13l6.232-6.232a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.94l-3.114 1.04 1.04-3.114a4 4 0 01.94-1.414z"/></svg>';
 
 // ── Translations ──────────────────────────────────────────────────────────────
 const T = {
@@ -61,6 +64,7 @@ const T = {
     vinsSelectionnes: n => `${n} vin${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} pour l'envoi`,
     copier: 'Copier',
     copierNotes: 'Copier les notes',
+    modifier: 'Modifier',
     trierPar: 'Trier par',
     meilleurScore: 'Meilleur score',
     nomAZ: 'Nom A–Z',
@@ -92,6 +96,7 @@ const T = {
     vinsSelectionnes: n => `${n} wine${n > 1 ? 's' : ''} selected`,
     copier: 'Copy',
     copierNotes: 'Copy scores',
+    modifier: 'Edit',
     trierPar: 'Sort by',
     meilleurScore: 'Best score',
     nomAZ: 'Name A–Z',
@@ -481,17 +486,20 @@ function renderCard(wine, originalIdx) {
   return `
     <div class="wine-card ${colorClass} ${isSelected ? 'selected' : ''}" data-idx="${originalIdx}">
 
-      <!-- Domaine + checkbox -->
+      <!-- Domaine + actions (crayon admin + checkbox) -->
       <div class="card-row-top">
         <span class="card-domaine">${(wine['Domaine ou Marque'] || '').trim()}</span>
-        <input type="checkbox" class="card-checkbox" data-idx="${originalIdx}" ${isSelected ? 'checked' : ''} />
+        <div class="card-row-actions">
+          ${isAdmin ? `<button class="card-edit-btn" data-idx="${originalIdx}" title="${t('modifier')}">${ICON_PENCIL_SVG}</button>` : ''}
+          <input type="checkbox" class="card-checkbox" data-idx="${originalIdx}" ${isSelected ? 'checked' : ''} />
+        </div>
       </div>
 
-      <!-- Nom du vin -->
-      <div class="card-name">${wine['Nom du vin'] || ''}</div>
-
-      <!-- Millésime -->
-      <div class="card-vintage">${wine['Millésime'] || '—'}</div>
+      <!-- Nom du vin + millésime -->
+      <div class="card-name-row">
+        <span class="card-name">${wine['Nom du vin'] || ''}</span>
+        <span class="card-vintage-inline">${wine['Millésime'] || '—'}</span>
+      </div>
 
       <!-- Badges de score -->
       <div class="card-badges">${badgesHTML}</div>
@@ -560,6 +568,7 @@ function renderRow(wine, originalIdx) {
         <button class="card-copy-btn" data-idx="${originalIdx}" title="${t('copierNotes')}">
           <svg width="13" height="13" viewBox="0 0 115.77 122.88" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M89.62,13.96v7.73h12.19v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v73.29h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02H40.1v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02V92.51H13.96v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1C1.6,85.88,0.04,82.41,0.03,78.57H0V13.96h0.02C0.03,10.11,1.6,6.62,4.12,4.1C6.63,1.6,10.1,0.04,13.94,0.03V0h61.72v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96zM79.04,21.69v-7.73h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02H13.96v-0.02c-0.91,0-1.75,0.39-2.37,1.01c-0.61,0.61-1,1.46-1,2.37h0.02v64.62h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h12.19V35.65h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02H79.04zM105.18,108.92V35.65h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02H40.1v-0.02c-0.91,0-1.75,0.39-2.37,1.01c-0.61,0.61-1,1.46-1,2.37h0.02v73.29h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h61.72v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02z"/></svg>
         </button>
+        ${isAdmin ? `<button class="card-edit-btn" data-idx="${originalIdx}" title="${t('modifier')}">${ICON_PENCIL_SVG}</button>` : ''}
         <input type="checkbox" class="card-checkbox" data-idx="${originalIdx}" ${isSelected ? 'checked' : ''} />
       </div>
     </div>`;
@@ -575,8 +584,17 @@ function bindEvents(container) {
   const selector = state.view === 'list' ? '.list-row' : '.wine-card';
   container.querySelectorAll(selector).forEach(card => {
     card.addEventListener('click', e => {
-      if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn')) return;
+      if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn') || e.target.closest('.card-edit-btn')) return;
       openModal(+card.dataset.idx);
+    });
+  });
+  container.querySelectorAll('.card-edit-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const wine = state.wines[+btn.dataset.idx];
+      if (!wine || !openAdminEditForm) return;
+      document.getElementById('adminPanel').style.display = 'flex';
+      openAdminEditForm(wine._id);
     });
   });
   container.querySelectorAll('.card-checkbox').forEach(cb => {
@@ -610,7 +628,7 @@ function renderGrid() {
   if (state.view === 'list') {
     grid.className = 'px-4 sm:px-6 pb-8 flex flex-col';
   } else {
-    grid.className = 'px-4 sm:px-6 pb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3';
+    grid.className = 'px-4 sm:px-6 pb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3';
   }
 
   if (!lastFiltered.length) {
@@ -804,6 +822,7 @@ function exportXLSX() {
 
 // ── Admin CRUD ────────────────────────────────────────────────────────────────
 const CRITIC_NAMES = Object.keys(CRITIC_ABBREV);
+const ICON_DUPLICATE_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>';
 let adminEditingId = null; // null = pas d'édition, 'new' = nouveau vin, sinon _id du vin édité
 let adminNotesDraft = [];  // notes en cours d'édition dans le formulaire
 
@@ -872,8 +891,10 @@ function initAdminPanel() {
   }
 
   onAuthStateChanged(auth, user => {
-    if (user && user.email === ADMIN_EMAIL) showLoggedIn();
+    isAdmin = !!(user && user.email === ADMIN_EMAIL);
+    if (isAdmin) showLoggedIn();
     else showLoggedOut();
+    renderGrid();
   });
 
   loginBtn.addEventListener('click', async () => {
@@ -907,12 +928,22 @@ function initAdminPanel() {
       })
       .sort((a, b) => (+b['Millésime'] || 0) - (+a['Millésime'] || 0));
     listEl.innerHTML = filtered.map(w => `
-      <div class="admin-wine-row" data-id="${w._id}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #334155;cursor:pointer;font-size:0.78rem">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(w['Domaine ou Marque'] || '').trim()} — ${w['Nom du vin'] || ''} (${w['Millésime'] || '—'})</span>
+      <div class="admin-wine-row" data-id="${w._id}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #334155;font-size:0.78rem">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(w['Domaine ou Marque'] || '').trim()} — ${w['Nom du vin'] || ''} (${w['Millésime'] || '—'})</span>
+        <div class="admin-row-actions">
+          <button class="admin-row-btn" data-action="duplicate" data-id="${w._id}" title="Dupliquer">${ICON_DUPLICATE_SVG}</button>
+          <button class="admin-row-btn" data-action="edit" data-id="${w._id}" title="Modifier">${ICON_PENCIL_SVG}</button>
+          <button class="admin-row-btn admin-row-btn-delete" data-action="delete" data-id="${w._id}" title="Supprimer">✕</button>
+        </div>
       </div>`).join('') || '<div style="padding:10px;font-size:0.75rem;color:#64748b">Aucun vin.</div>';
 
-    listEl.querySelectorAll('.admin-wine-row').forEach(row => {
-      row.addEventListener('click', () => openEditForm(row.dataset.id));
+    listEl.querySelectorAll('.admin-row-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const { action, id } = btn.dataset;
+        if (action === 'edit') openEditForm(id);
+        else if (action === 'duplicate') startDuplicate(id);
+        else if (action === 'delete') deleteWineById(id);
+      });
     });
   }
   searchIn.addEventListener('input', renderAdminWineList);
@@ -969,6 +1000,7 @@ function initAdminPanel() {
     deleteBtn.style.display = 'inline-block';
     status.textContent = '';
   }
+  openAdminEditForm = openEditForm;
 
   addWineBtn.addEventListener('click', () => {
     adminEditingId = 'new';
@@ -982,6 +1014,19 @@ function initAdminPanel() {
     formEl.style.display = 'none';
     adminEditingId = null;
   });
+
+  function startDuplicate(id) {
+    const wine = state.wines.find(w => w._id === id);
+    if (!wine) return;
+    adminEditingId = 'new';
+    fillForm(wine);
+    formEl.style.display = 'block';
+    deleteBtn.style.display = 'none';
+    status.textContent = '';
+    const milInput = document.getElementById('fMillesime');
+    milInput.value = '';
+    milInput.focus();
+  }
 
   function readForm() {
     const paysMap = { france: 'France', argentine: 'Argentine', espagne: 'Espagne', chili: 'Chili' };
@@ -1026,20 +1071,24 @@ function initAdminPanel() {
     }
   });
 
-  deleteBtn.addEventListener('click', async () => {
-    if (adminEditingId === 'new' || !adminEditingId) return;
+  async function deleteWineById(id) {
+    if (!id || id === 'new') return;
     if (!confirm('Supprimer définitivement ce vin ?')) return;
     try {
-      await deleteDoc(doc(db, 'wines', adminEditingId));
+      await deleteDoc(doc(db, 'wines', id));
       await reloadWines();
       renderAdminWineList();
-      formEl.style.display = 'none';
-      adminEditingId = null;
+      if (adminEditingId === id) {
+        formEl.style.display = 'none';
+        adminEditingId = null;
+      }
     } catch (err) {
       status.style.color = '#f87171';
       status.textContent = 'Erreur : ' + err.message;
     }
-  });
+  }
+
+  deleteBtn.addEventListener('click', () => deleteWineById(adminEditingId));
 
   closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
 
