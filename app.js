@@ -817,7 +817,9 @@ function exportXLSX() {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Wine Awards');
-  XLSX.writeFile(wb, 'wine-awards-lurton.xlsx');
+  const today = new Date();
+  const dateStr = [String(today.getDate()).padStart(2, '0'), String(today.getMonth() + 1).padStart(2, '0'), today.getFullYear()].join('-');
+  XLSX.writeFile(wb, `wine-awards-lurton-${dateStr}.xlsx`);
 }
 
 // ── Admin CRUD ────────────────────────────────────────────────────────────────
