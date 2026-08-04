@@ -371,13 +371,12 @@ function renderRecentNotes(wines) {
     return `
       <div class="recent-card ${colorClass}" data-idx="${idx}" style="border-left-width:3px">
         <div style="flex:1;min-width:0">
-          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">${(w['Domaine ou Marque'] || '').trim()} · ${countryCode}</div>
+          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5 truncate">${(w['Domaine ou Marque'] || '').trim()} · ${countryCode}</div>
           <div class="text-sm font-bold text-slate-900 leading-tight truncate">${w['Nom du vin'] || ''}</div>
-          <div class="text-xs text-slate-400">${w['Millésime'] || ''}</div>
-          <div class="text-[10px] text-slate-300 mt-1">${w['date_ajout'] || ''}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 truncate">${w['Millésime'] || ''}${w['Millésime'] && w['date_ajout'] ? ' · ' : ''}${w['date_ajout'] || ''}</div>
         </div>
-        ${lastNote ? `<div style="text-align:right;flex-shrink:0">
-          <div class="big-score">${displayScore}</div>
+        ${lastNote ? `<div style="text-align:right;flex-shrink:0;max-width:76px">
+          <div class="big-score" style="${lastNum === null ? 'font-size:0.66rem;line-height:1.25;' : ''}">${displayScore}</div>
           <div class="score-critic">${abbrev}</div>
         </div>` : ''}
       </div>`;
