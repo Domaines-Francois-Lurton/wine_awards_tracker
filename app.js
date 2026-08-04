@@ -361,9 +361,10 @@ function renderRecentNotes(wines) {
 
   el.innerHTML = dated.map((w, i) => {
     const colorClass = colorCssClass(w['Couleur']);
-    const nums = getNumericScores(w).sort((a, b) => b.num - a.num);
-    const top = nums[0];
-    const abbrev = top ? (CRITIC_ABBREV[top.col] || top.col) : '';
+    const lastNote = w._notes.length ? w._notes[w._notes.length - 1] : null;
+    const lastNum = lastNote ? extractScoreNum(lastNote.score) : null;
+    const abbrev = lastNote ? (CRITIC_ABBREV[lastNote.critic] || lastNote.critic) : '';
+    const displayScore = lastNum !== null ? Math.round(lastNum) : (lastNote ? lastNote.score : '');
     const pays = norm(w['Pays']);
     const countryCode = COUNTRY_CODE[pays] || '';
     const idx = state.wines.indexOf(w);
@@ -375,8 +376,8 @@ function renderRecentNotes(wines) {
           <div class="text-xs text-slate-400">${w['Millésime'] || ''}</div>
           <div class="text-[10px] text-slate-300 mt-1">${w['date_ajout'] || ''}</div>
         </div>
-        ${top ? `<div style="text-align:right;flex-shrink:0">
-          <div class="big-score">${Math.round(top.num)}</div>
+        ${lastNote ? `<div style="text-align:right;flex-shrink:0">
+          <div class="big-score">${displayScore}</div>
           <div class="score-critic">${abbrev}</div>
         </div>` : ''}
       </div>`;
