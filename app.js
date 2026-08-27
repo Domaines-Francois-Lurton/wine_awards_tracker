@@ -205,6 +205,95 @@ function maxScore(wine) {
   return nums.length ? Math.max(...nums.map(s => s.num)) : 0;
 }
 
+// ── Notes qualitatives (medailles, /20, etoiles) ──────────────────────────────
+// Certains concours ne donnent pas de score /100 mais une medaille ("OR"),
+// une note /20 (Jancis Robinson, Le Point) ou des etoiles (Harpers). Ces notes
+// existent et doivent apparaitre sur la carte comme dans la fiche.
+// NB : elles n'ont volontairement AUCUN equivalent numerique — le tri par score
+// et le filtre score minimum restent bases uniquement sur maxScore().
+
+const MEDAL_TIER_RANK = { master: 5, gold: 4, silver: 3, bronze: 2 };
+
+const deaccent = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const escAttr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+  .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Detecte une medaille dans une cellule, quel que soit la casse, la langue ou
+// le suffixe ("OR (CDG)", "Gold Medal", "ARGENT (VDF)"). Ordre = rang decroissant.
+function extractMedal(val) {
+  const s = deaccent(val || '').toLowerCase();
+  if (/\bmaster\b/.test(s)) return { tier: 'master', label: 'MASTER' };
+  if (/\b(double|dble|grand)\s*(gold|or)\b/.test(s)) return { tier: 'gold', label: 'DOUBLE OR' };
+  if (/\b(gold|or)\b/.test(s)) return { tier: 'gold', label: 'OR' };
+  if (/\b(silver|argent)\b/.test(s)) return { tier: 'silver', label: 'ARGENT' };
+  if (/\bbronze\b/.test(s)) return { tier: 'bronze', label: 'BRONZE' };
+  return null;
+}
+
+// Echelle /20 : la cellule entiere est un nombre entre 5 et 20 ("16", "16,5", "17+")
+function extractTwentyScale(val) {
+  const s = (val || '').trim();
+  if (!/^\d{1,2}([.,]\d+)?\+?$/.test(s)) return null;
+  const n = parseFloat(s.replace(',', '.'));
+  return (!isNaN(n) && n >= 5 && n <= 20) ? `${s}/20` : null;
+}
+
+// Etoiles : "4*", "3*"
+function extractStars(val) {
+  const m = (val || '').trim().match(/^([1-5])\s*\*+$/);
+  return m ? '★'.repeat(+m[1]) : null;
+}
+
+// Une entree de badge par cellule notee : numerique, medaille, ou qualitatif.
+// `rank` ne sert qu'a l'ordre d'affichage des badges (numeriques d'abord,
+// puis medailles par rang, puis le reste).
+function getDisplayScores(wine) {
+  return getScores(wine).map(({ col, val }) => {
+    const raw = (val || '').trim();
+
+    const num = extractScoreNum(val);
+    if (num !== null) {
+      return { col, val: raw, kind: 'num', num,
+               display: Number.isInteger(num) ? String(num) : num.toFixed(1),
+               cls: num > 96 ? 'elite' : '', rank: 1000 + num };
+    }
+
+    const medal = extractMedal(raw);
+    if (medal) {
+      return { col, val: raw, kind: 'medal', display: medal.label,
+               cls: `medal-${medal.tier}`, rank: 100 + MEDAL_TIER_RANK[medal.tier] };
+    }
+
+    const twenty = extractTwentyScale(raw);
+    if (twenty) return { col, val: raw, kind: 'qual', display: twenty, cls: 'qual', rank: 50 };
+
+    const stars = extractStars(raw);
+    if (stars) return { col, val: raw, kind: 'qual', display: stars, cls: 'qual', rank: 50 };
+
+    // Note libre : on tronque pour ne pas casser la carte, valeur complete au survol
+    const display = raw.length > 16 ? raw.slice(0, 15) + '…' : raw;
+    return { col, val: raw, kind: 'qual', display, cls: 'qual', rank: 10 };
+  }).sort((a, b) => b.rank - a.rank);
+}
+
+// Badge partage entre la carte et la vue liste
+function scoreBadgeHTML(entry) {
+  const abbrev = CRITIC_ABBREV[entry.col] || entry.col;
+  const title = entry.display === entry.val ? entry.col : `${entry.col} : ${entry.val}`;
+  return `<span class="score-badge ${entry.cls}" title="${escAttr(title)}">${abbrev} ${entry.display}</span>`;
+}
+
+// Les 4 premiers badges + compteur de debordement
+function buildBadgesHTML(wine) {
+  const all = getDisplayScores(wine);
+  const visible = all.slice(0, 4);
+  const extra = all.length - visible.length;
+  if (!visible.length) return '';
+  return visible.map(scoreBadgeHTML).join('')
+    + (extra > 0 ? `<span class="badge-extra">+${extra}</span>` : '');
+}
+
 function isInStock(wine) {
   return norm(wine['Available']) === 'x';
 }
@@ -232,7 +321,9 @@ function computeKPIs(wines) {
   let all = [], noteCount = 0, elite = 0;
   wines.forEach(w => {
     const nums = getNumericScores(w);
-    if (nums.length) { noteCount++; nums.forEach(s => all.push(s.num)); }
+    // La moyenne reste purement numerique, mais une medaille compte comme une note
+    if (nums.length) nums.forEach(s => all.push(s.num));
+    if (getScores(w).length) noteCount++;
     if (maxScore(w) >= 95) elite++;
   });
   const avg = all.length ? (all.reduce((a, b) => a + b, 0) / all.length).toFixed(1) : '—';
@@ -471,17 +562,8 @@ function renderCard(wine, originalIdx) {
   const pays = norm(wine['Pays']);
   const code = COUNTRY_CODE[pays] || '';
 
-  const allScores = getNumericScores(wine).sort((a, b) => b.num - a.num);
-  const visible = allScores.slice(0, 4);
-  const extra = allScores.length - visible.length;
-
-  const badgesHTML = visible.length
-    ? visible.map(({ col, num }) => {
-        const abbrev = CRITIC_ABBREV[col] || col;
-        const display = Number.isInteger(num) ? num : num.toFixed(1);
-        return `<span class="score-badge ${num > 96 ? 'elite' : ''}">${abbrev} ${display}</span>`;
-      }).join('') + (extra > 0 ? `<span class="badge-extra">+${extra}</span>` : '')
-    : `<span class="no-score">${t('aucuneNote')}</span>`;
+  const badgesHTML = buildBadgesHTML(wine)
+    || `<span class="no-score">${t('aucuneNote')}</span>`;
 
   return `
     <div class="wine-card ${colorClass} ${isSelected ? 'selected' : ''}" data-idx="${originalIdx}">
@@ -525,9 +607,7 @@ function renderRow(wine, originalIdx) {
   const pays = norm(wine['Pays']);
   const code = COUNTRY_CODE[pays] || '';
 
-  const allScores = getNumericScores(wine).sort((a, b) => b.num - a.num);
-  const visible = allScores.slice(0, 4);
-  const extra = allScores.length - visible.length;
+  const badgesHTML = buildBadgesHTML(wine);
 
   const colorDot = {
     'color-rouge': '#c0392b',
@@ -535,12 +615,6 @@ function renderRow(wine, originalIdx) {
     'color-rose':  '#db2777',
     'color-autre': '#94a3b8',
   }[colorClass] || '#94a3b8';
-
-  const badgesHTML = visible.map(({ col, num }) => {
-    const abbrev = CRITIC_ABBREV[col] || col;
-    const display = Number.isInteger(num) ? num : num.toFixed(1);
-    return `<span class="score-badge ${num > 96 ? 'elite' : ''}">${abbrev} ${display}</span>`;
-  }).join('') + (extra > 0 ? `<span class="badge-extra">+${extra}</span>` : '');
 
   return `
     <div class="list-row ${isSelected ? 'selected' : ''}" data-idx="${originalIdx}">
@@ -723,23 +797,18 @@ function openModal(idx) {
   document.getElementById('modalMeta').textContent =
     `${wine['Millésime'] || '—'} · ${(wine['Couleur'] || '').trim()} · ${(wine['Pays'] || '').trim()}`;
 
-  // Scores
-  const scores = getScores(wine).sort((a, b) => {
-    const na = parseFloat(a.val), nb = parseFloat(b.val);
-    if (!isNaN(na) && !isNaN(nb)) return nb - na;
-    return 0;
-  });
+  // Scores — meme classement que les badges ; la fiche affiche la valeur brute
+  // ("OR (CDG)") mais reprend la couleur de la medaille.
+  const scores = getDisplayScores(wine);
 
   document.getElementById('modalScores').innerHTML = scores.length
     ? `<div class="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-2">${t('notesCritiques')}</div>
-       <div>${scores.map(({ col, val }) => {
+       <div>${scores.map(({ col, val, cls }) => {
          const abbrev = CRITIC_ABBREV[col] || col;
-         const num = parseFloat(val);
-         const elite = !isNaN(num) && num > 96;
          const comment = wine._comments && wine._comments[col];
          return `<div class="modal-score-row">
            <span class="modal-critic-name">${col} <span class="text-slate-400 text-xs">(${abbrev})</span></span>
-           <span class="modal-score-val ${elite ? 'elite' : ''}">${val}</span>
+           <span class="modal-score-val ${cls}">${val}</span>
          </div>${comment ? `<div class="text-xs text-slate-400 italic mb-2" style="padding-left:2px">${comment}</div>` : ''}`;
        }).join('')}</div>`
     : `<div class="text-sm text-slate-400 italic">${t('aucuneNote')}.</div>`;

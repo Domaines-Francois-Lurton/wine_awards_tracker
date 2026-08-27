@@ -242,6 +242,33 @@
   color: #fbbf24;
   border-color: rgba(251,191,36,0.2);
 }
+
+/* Medailles de concours (OR / ARGENT / BRONZE / MASTER) */
+.score-badge.medal-gold {
+  background: #fbf3dd;
+  color: #86671b;
+  border-color: #ecdcae;
+}
+.score-badge.medal-silver {
+  background: #eff2f6;
+  color: #5b6675;
+  border-color: #dbe1e9;
+}
+.score-badge.medal-bronze {
+  background: #f9ede3;
+  color: #8a5426;
+  border-color: #e9d2bd;
+}
+.score-badge.medal-master {
+  background: #1e293b;
+  color: #fbbf24;
+  border-color: rgba(251,191,36,0.25);
+}
+/* Notes qualitatives sans medaille (/20, etoiles, texte libre) */
+.score-badge.qual {
+  font-weight: 600;
+  color: #475569;
+}
 .badge-extra {
   font-size: 0.62rem;
   color: #94a3b8;
@@ -479,3 +506,8 @@
   border-radius: 4px;
 }
 .modal-score-val.elite { background: #0f172a; color: #fbbf24; }
+.modal-score-val.medal-gold { background: #fbf3dd; color: #86671b; }
+.modal-score-val.medal-silver { background: #eff2f6; color: #5b6675; }
+.modal-score-val.medal-bronze { background: #f9ede3; color: #8a5426; }
+.modal-score-val.medal-master { background: #0f172a; color: #fbbf24; }
+.modal-score-val.qual { color: #334155; }
