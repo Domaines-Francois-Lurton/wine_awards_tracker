@@ -4,6 +4,7 @@ import {
   orderNotesForModal, datedNoteEntries, filterByPeriod, yearsWithNotes, monthsWithNotes,
   noteCopyLine, datedFromLegacy,
 } from './notes-utils.js';
+import { readWinesCache, writeWinesCache, clearWinesCache, newWinesVersion, winesVersionOf } from './wines-cache.js';
 import {
   collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, setDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -1212,14 +1213,59 @@ const ICON_DUPLICATE_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill
 let adminEditingId = null; // null = pas d'édition, 'new' = nouveau vin, sinon _id du vin édité
 let adminNotesDraft = [];  // notes en cours d'édition dans le formulaire
 
-async function reloadWines() {
-  const snap = await getDocs(collection(db, 'wines'));
-  state.wines = snap.docs.map(d => hydrateWine(d.id, d.data()));
+// ── Chargement des fiches, avec cache local (voir wines-cache.js) ─────────────
+let rawWines = [];        // fiches telles que lues dans Firestore : [{ id, data }]
+let winesVersion = null;  // version lue dans config/site ; null = inconnue, pas de cache
+
+function browserStorage() {
+  try { return window.localStorage; } catch { return null; }
+}
+
+function setWines(docs) {
+  rawWines = docs;
+  state.wines = docs.map(d => hydrateWine(d.id, d.data));
   state.criticCols = [...new Set(state.wines.flatMap(w => w._notes.map(n => n.critic)))];
+}
+
+// Copie locale si la version n'a pas changé (0 lecture), sinon une lecture par fiche
+async function loadWines() {
+  const cached = winesVersion && readWinesCache(browserStorage(), winesVersion);
+  if (cached) { setWines(cached); return; }
+  const snap = await getDocs(collection(db, 'wines'));
+  setWines(snap.docs.map(d => ({ id: d.id, data: d.data() })));
+  if (winesVersion) writeWinesCache(browserStorage(), winesVersion, rawWines);
+}
+
+function refreshCatalogue() {
   computeKPIs(state.wines);
   initFilters(state.wines);
   renderRecentNotes(state.wines);
   renderGrid();
+}
+
+// Après une écriture admin : mise à jour locale (sans relire toutes les fiches),
+// puis nouvelle version pour que les autres navigateurs abandonnent leur copie.
+// data = champs enregistrés, ou null pour une suppression. Renvoie false si la
+// version n'a pas pu être changée (les autres postes gardent alors leur copie 24 h au plus).
+async function commitWineChange(id, data) {
+  const i = rawWines.findIndex(d => d.id === id);
+  const docs = rawWines.filter(d => d.id !== id);
+  if (data) {
+    const merged = { id, data: { ...(i === -1 ? {} : rawWines[i].data), ...data } };
+    if (i === -1) docs.push(merged); else docs.splice(i, 0, merged);
+  }
+  setWines(docs);
+  refreshCatalogue();
+  try {
+    const version = newWinesVersion();
+    await setDoc(doc(db, 'config', 'site'), { winesVersion: version }, { merge: true });
+    winesVersion = version;
+    writeWinesCache(browserStorage(), winesVersion, rawWines);
+    return true;
+  } catch {
+    clearWinesCache(browserStorage());
+    return false;
+  }
 }
 
 function initAdminPanel() {
@@ -1444,17 +1490,18 @@ function initAdminPanel() {
     status.style.color = '#94a3b8';
     status.textContent = 'Enregistrement…';
     try {
+      let id = adminEditingId;
       if (adminEditingId === 'new') {
-        await addDoc(collection(db, 'wines'), data);
+        id = (await addDoc(collection(db, 'wines'), data)).id;
       } else {
         await updateDoc(doc(db, 'wines', adminEditingId), data);
       }
-      await reloadWines();
+      const versionOk = await commitWineChange(id, data);
       renderAdminWineList();
       formEl.style.display = 'none';
       adminEditingId = null;
-      status.style.color = '#10b981';
-      status.textContent = 'Enregistré.';
+      status.style.color = versionOk ? '#10b981' : '#fbbf24';
+      status.textContent = versionOk ? 'Enregistré.' : 'Enregistré, mais les autres postes peuvent mettre jusqu\'à 24 h à voir la modification.';
     } catch (err) {
       status.style.color = '#f87171';
       status.textContent = 'Erreur : ' + err.message;
@@ -1468,7 +1515,7 @@ function initAdminPanel() {
     if (!confirm('Supprimer définitivement ce vin ?')) return;
     try {
       await deleteDoc(doc(db, 'wines', id));
-      await reloadWines();
+      await commitWineChange(id, null);
       renderAdminWineList();
       if (adminEditingId === id) {
         formEl.style.display = 'none';
@@ -1494,18 +1541,17 @@ function initAdminPanel() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Charge config/site pour l'état global du stock (visible par tous)
+  // Charge config/site : état global du stock (visible par tous) et version des fiches
   try {
     const cfgSnap = await getDoc(doc(db, 'config', 'site'));
     if (cfgSnap.exists() && typeof cfgSnap.data().showStock === 'boolean') {
       stockFeatureEnabled = cfgSnap.data().showStock;
     }
-  } catch { /* config absente ou invalide : on garde la valeur par défaut */ }
+    winesVersion = winesVersionOf(cfgSnap.data());
+  } catch { /* config illisible : valeur de stock par défaut, et pas de cache */ }
 
   try {
-    const snap = await getDocs(collection(db, 'wines'));
-    state.wines = snap.docs.map(d => hydrateWine(d.id, d.data()));
-    state.criticCols = [...new Set(state.wines.flatMap(w => w._notes.map(n => n.critic)))];
+    await loadWines();
   } catch {
     document.getElementById('wineGrid').innerHTML =
       '<div class="col-span-full text-red-400 text-sm py-12 text-center">Impossible de charger les données.</div>';
