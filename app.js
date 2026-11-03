@@ -87,7 +87,7 @@ const T = {
     nouveau: 'Nouveau',
     toutVoir: 'Tout voir →',
     nouvellesNotes: 'Nouvelles notes',
-    retourCatalogue: '← Retour au catalogue',
+    retourCatalogue: 'Retour au catalogue',
     tousMois: 'Tous',
     annee: 'Année',
     aucuneNouvelleNote: 'Aucune nouvelle note sur cette période.',
@@ -128,7 +128,7 @@ const T = {
     nouveau: 'New',
     toutVoir: 'See all →',
     nouvellesNotes: 'New scores',
-    retourCatalogue: '← Back to catalogue',
+    retourCatalogue: 'Back to catalogue',
     tousMois: 'All',
     annee: 'Year',
     aucuneNouvelleNote: 'No new scores for this period.',
@@ -882,8 +882,8 @@ function renderNewsView() {
   });
 
   el.innerHTML = `
+    <button type="button" class="news-back" data-news="back"><span aria-hidden="true">←</span>${t('retourCatalogue')}</button>
     <div class="news-head">
-      <button type="button" class="news-back" data-news="back">${t('retourCatalogue')}</button>
       <h2 class="news-title">${t('nouvellesNotes')}</h2>
       <button type="button" class="news-copy" data-news="copy" ${news.shown.length ? '' : 'disabled'}>${COPY_ICON_SVG}<span>${t('copier')}</span></button>
     </div>
