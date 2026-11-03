@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="icon" href="favicon.ico" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wine Awards Tracker - Domaines François Lurton</title>
@@ -21,57 +22,53 @@
   <meta name="twitter:image"       content="https://domaines-francois-lurton.github.io/wine_awards_tracker/preview.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="text-slate-900 min-h-screen" style="background-color:#F7F6F4">
 
-  <!-- ── HEADER ── -->
-  <header class="bg-white border-b border-slate-100 sticky top-0 z-40" style="height:72px">
-    <div class="h-full flex items-center">
-
-      <!-- Zone logo — largeur sidebar, padding vertical pour respiration -->
-      <div class="flex-shrink-0 w-16 lg:w-64 flex items-center justify-center border-r border-slate-100 h-full" style="padding: 12px 20px">
-        <button id="sidebarToggle" class="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
-        <img src="logo.svg" alt="Domaines François Lurton" class="hidden lg:block w-full h-auto object-contain" style="max-height:44px" />
+  <!-- ── HEADER (harmonisé avec Explotiq et le Portail Marketing) ── -->
+  <header class="site-header sticky top-0 z-40">
+    <div class="site-header__left">
+      <button id="sidebarToggle" class="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors" aria-label="Filtres">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">WA</span>
+        <span class="brand__name">Wine Awards Tracker</span>
       </div>
+    </div>
 
-      <!-- Search — alignée à gauche, prend tout l'espace, très visible -->
-      <div class="flex-1 flex items-center px-5 sm:px-8">
-        <div class="relative w-full">
-          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-          </svg>
-          <input id="searchInput" type="text" placeholder="Rechercher un vin, domaine, critique, note…" autocomplete="off"
-            class="w-full border-2 border-slate-200 rounded-xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:border-slate-900 bg-white placeholder-slate-400 transition-colors" />
-        </div>
+    <!-- Recherche — reste dans le header : c'est l'outil principal -->
+    <div class="header-search">
+      <svg class="header-search__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="Rechercher un vin, domaine, critique, note…" autocomplete="off" class="header-search__input" />
+    </div>
+
+    <!-- Langue + Export + Admin -->
+    <div class="site-header__actions">
+      <div class="lang-switch">
+        <button id="langFr" class="lang-btn">FR</button>
+        <button id="langEn" class="lang-btn">EN</button>
       </div>
-
-      <!-- Lang toggle + Export -->
-      <div class="flex-shrink-0 pr-5 flex items-center gap-2">
-        <!-- FR / EN -->
-        <div class="flex rounded-lg border border-slate-200 overflow-hidden bg-white text-xs font-bold">
-          <button id="langFr" class="lang-btn px-2.5 py-1.5">FR</button>
-          <button id="langEn" class="lang-btn px-2.5 py-1.5 border-l border-slate-200">EN</button>
-        </div>
-        <button id="exportXlsxBtn"
-          class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+        <button id="exportXlsxBtn" class="header-link" title="Export XLSX">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
           <span class="hidden sm:inline">XLSX</span>
         </button>
-        <button id="adminBtn" title="Administration"
-          class="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+        <button id="adminBtn" class="header-link" title="Administration">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
           </svg>
           <span class="hidden sm:inline">Admin</span>
         </button>
-      </div>
     </div>
   </header>
 
@@ -134,11 +131,17 @@
         <div id="kpiAvg"></div><div id="kpiElite"></div>
       </div>
 
+      <!-- Catalogue (bandeau + grille) — masqué quand la vue Nouvelles notes est ouverte -->
+      <div id="catalogueView">
+
       <!-- Dernières notes -->
       <div class="px-4 sm:px-6 pt-5 pb-4">
-        <p class="text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 mb-3 flex items-center gap-1.5">
-          <span class="text-amber-400">★</span> <span id="recentNotesTitle">Dernières notes reçues</span>
-        </p>
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <button type="button" id="recentNotesOpen" class="recent-title text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400 flex items-center gap-1.5">
+            <span class="text-amber-400">★</span> <span id="recentNotesTitle">Dernières notes reçues</span>
+          </button>
+          <button type="button" id="recentNotesAll" class="recent-all">Tout voir →</button>
+        </div>
         <div id="recentNotes" class="flex gap-3 overflow-x-auto pb-1 scrollbar-hide"></div>
       </div>
 
@@ -187,6 +190,11 @@
       <div id="wineGrid" class="px-4 sm:px-6 pb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
         <div class="col-span-full text-sm text-slate-400 py-16 text-center">Chargement…</div>
       </div>
+
+      </div>
+
+      <!-- Vue « Nouvelles notes » (une ligne par note datée, par année / mois) -->
+      <section id="newsView" class="news hidden"></section>
     </main>
   </div>
 
@@ -316,16 +324,8 @@
         <input id="fDomaine" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
         <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Nom du vin</label>
         <input id="fNom" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Millésime</label>
-            <input id="fMillesime" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
-          </div>
-          <div>
-            <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Date d'ajout (jj/mm/aaaa)</label>
-            <input id="fDateAjout" placeholder="01/01/2026" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px" />
-          </div>
-        </div>
+        <label style="font-size:0.65rem;color:#94a3b8;display:block;margin-bottom:3px">Millésime</label>
+        <input id="fMillesime" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.78rem;padding:6px;margin-bottom:8px" />
         <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;margin-bottom:12px;cursor:pointer">
           <input type="checkbox" id="fAvailable" /> En stock / disponible
         </label>

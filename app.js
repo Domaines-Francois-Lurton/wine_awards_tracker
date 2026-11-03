@@ -1,5 +1,10 @@
 import { db, auth } from './firebase-config.js';
 import {
+  cleanNote, latestNoteDate, todayFr, isoToFr, frToIso, parseFrDate, isNewNote,
+  orderNotesForModal, datedNoteEntries, filterByPeriod, yearsWithNotes, monthsWithNotes,
+  noteCopyLine, datedFromLegacy,
+} from './notes-utils.js';
+import {
   collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, setDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {
@@ -79,6 +84,15 @@ const T = {
     copie: 'Copié dans le presse-papiers',
     vignettes: 'Vignettes',
     liste: 'Liste',
+    nouveau: 'Nouveau',
+    toutVoir: 'Tout voir →',
+    nouvellesNotes: 'Nouvelles notes',
+    retourCatalogue: '← Retour au catalogue',
+    tousMois: 'Tous',
+    annee: 'Année',
+    aucuneNouvelleNote: 'Aucune nouvelle note sur cette période.',
+    nbNotes: (n, periode) => `${n} note${n > 1 ? 's' : ''} · ${periode}`,
+    copierLaNote: 'Copier cette note',
     countries: { france: 'France', argentine: 'Argentine', espagne: 'Espagne', chili: 'Chili' },
     colors: { rouge: 'Rouge', blanc: 'Blanc', 'rosé': 'Rosé', rose: 'Rosé', autre: 'Autre' },
   },
@@ -111,6 +125,15 @@ const T = {
     copie: 'Copied to clipboard',
     vignettes: 'Grid',
     liste: 'List',
+    nouveau: 'New',
+    toutVoir: 'See all →',
+    nouvellesNotes: 'New scores',
+    retourCatalogue: '← Back to catalogue',
+    tousMois: 'All',
+    annee: 'Year',
+    aucuneNouvelleNote: 'No new scores for this period.',
+    nbNotes: (n, periode) => `${n} score${n > 1 ? 's' : ''} · ${periode}`,
+    copierLaNote: 'Copy this score',
     countries: { france: 'France', argentine: 'Argentina', espagne: 'Spain', chili: 'Chile' },
     colors: { rouge: 'Red', blanc: 'White', 'rosé': 'Rosé', rose: 'Rosé', autre: 'Other' },
   }
@@ -137,6 +160,7 @@ const state = {
   view: 'grid', // 'grid' | 'list'
   selected: new Set(),
   modalIdx: null,
+  news: null, // { year, month } quand la vue « Nouvelles notes » est ouverte
 };
 
 // ── Firestore → shape attendue par le reste de l'app ──────────────────────────
@@ -249,32 +273,35 @@ function extractStars(val) {
 // `rank` ne sert qu'a l'ordre d'affichage des badges (numeriques d'abord,
 // puis medailles par rang, puis le reste).
 function getDisplayScores(wine) {
-  return getScores(wine).map(({ col, val }) => {
-    const raw = (val || '').trim();
+  return getScores(wine).map(({ col, val }) => displayScore(col, val)).sort((a, b) => b.rank - a.rank);
+}
 
-    const num = extractScoreNum(val);
-    if (num !== null) {
-      return { col, val: raw, kind: 'num', num,
-               display: Number.isInteger(num) ? String(num) : num.toFixed(1),
-               cls: num > 96 ? 'elite' : '', rank: 1000 + num };
-    }
+// Affichage d'une note isolée (score, médaille ou mention), avec son rang de tri
+function displayScore(col, val) {
+  const raw = (val || '').trim();
 
-    const medal = extractMedal(raw);
-    if (medal) {
-      return { col, val: raw, kind: 'medal', display: medal.label,
-               cls: `medal-${medal.tier}`, rank: 100 + MEDAL_TIER_RANK[medal.tier] };
-    }
+  const num = extractScoreNum(val);
+  if (num !== null) {
+    return { col, val: raw, kind: 'num', num,
+             display: Number.isInteger(num) ? String(num) : num.toFixed(1),
+             cls: num > 96 ? 'elite' : '', rank: 1000 + num };
+  }
 
-    const twenty = extractTwentyScale(raw);
-    if (twenty) return { col, val: raw, kind: 'qual', display: twenty, cls: 'qual', rank: 50 };
+  const medal = extractMedal(raw);
+  if (medal) {
+    return { col, val: raw, kind: 'medal', display: medal.label,
+             cls: `medal-${medal.tier}`, rank: 100 + MEDAL_TIER_RANK[medal.tier] };
+  }
 
-    const stars = extractStars(raw);
-    if (stars) return { col, val: raw, kind: 'qual', display: stars, cls: 'qual', rank: 50 };
+  const twenty = extractTwentyScale(raw);
+  if (twenty) return { col, val: raw, kind: 'qual', display: twenty, cls: 'qual', rank: 50 };
 
-    // Note libre : on tronque pour ne pas casser la carte, valeur complete au survol
-    const display = raw.length > 16 ? raw.slice(0, 15) + '…' : raw;
-    return { col, val: raw, kind: 'qual', display, cls: 'qual', rank: 10 };
-  }).sort((a, b) => b.rank - a.rank);
+  const stars = extractStars(raw);
+  if (stars) return { col, val: raw, kind: 'qual', display: stars, cls: 'qual', rank: 50 };
+
+  // Note libre : on tronque pour ne pas casser la carte, valeur complete au survol
+  const display = raw.length > 16 ? raw.slice(0, 15) + '…' : raw;
+  return { col, val: raw, kind: 'qual', display, cls: 'qual', rank: 10 };
 }
 
 // Badge partage entre la carte et la vue liste
@@ -431,31 +458,26 @@ function initFilters(wines) {
 }
 
 // ── Recent notes ──────────────────────────────────────────────────────────────
-function parseDate(str) {
-  if (!str) return null;
-  const parts = str.split('/');
-  if (parts.length === 3) return new Date(+parts[2], +parts[1] - 1, +parts[0]);
-  return new Date(str);
+// « oct. 2026 » / « Oct 2026 » selon la langue
+function monthFormatter() {
+  return new Intl.DateTimeFormat(state.lang === 'en' ? 'en-GB' : 'fr-FR', { month: 'short', year: 'numeric' });
 }
 
 function renderRecentNotes(wines) {
   const el = document.getElementById('recentNotes');
-  const dated = wines
-    .filter(w => w['date_ajout'] && w['date_ajout'].trim())
-    .sort((a, b) => parseDate(b['date_ajout']) - parseDate(a['date_ajout']))
-    .slice(0, 15);
+  // Une vignette par note datée : on affiche la note reçue, pas la dernière saisie
+  const latest = datedNoteEntries(wines).slice(0, 15);
 
-  if (!dated.length) {
+  if (!latest.length) {
     el.innerHTML = '<div class="text-xs text-slate-400 italic py-2">—</div>';
     return;
   }
 
-  el.innerHTML = dated.map((w, i) => {
+  el.innerHTML = latest.map(({ wine: w, note }) => {
     const colorClass = colorCssClass(w['Couleur']);
-    const lastNote = w._notes.length ? w._notes[w._notes.length - 1] : null;
-    const lastNum = lastNote ? extractScoreNum(lastNote.score) : null;
-    const abbrev = lastNote ? (CRITIC_ABBREV[lastNote.critic] || lastNote.critic) : '';
-    const displayScore = lastNum !== null ? Math.round(lastNum) : (lastNote ? lastNote.score : '');
+    const num = extractScoreNum(note.score);
+    const abbrev = CRITIC_ABBREV[note.critic] || note.critic;
+    const shown = num !== null ? Math.round(num) : note.score;
     const pays = norm(w['Pays']);
     const countryCode = COUNTRY_CODE[pays] || '';
     const idx = state.wines.indexOf(w);
@@ -464,12 +486,12 @@ function renderRecentNotes(wines) {
         <div style="flex:1;min-width:0">
           <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5 truncate">${(w['Domaine ou Marque'] || '').trim()} · ${countryCode}</div>
           <div class="text-sm font-bold text-slate-900 leading-tight truncate">${w['Nom du vin'] || ''}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5 truncate">${w['Millésime'] || ''}${w['Millésime'] && w['date_ajout'] ? ' · ' : ''}${w['date_ajout'] || ''}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 truncate">${w['Millésime'] || ''}${w['Millésime'] ? ' · ' : ''}${note.date}</div>
         </div>
-        ${lastNote ? `<div style="text-align:right;flex-shrink:0;max-width:76px">
-          <div class="big-score" style="${lastNum === null ? 'font-size:0.66rem;line-height:1.25;' : ''}">${displayScore}</div>
+        <div style="text-align:right;flex-shrink:0;max-width:76px">
+          <div class="big-score" style="${num === null ? 'font-size:0.66rem;line-height:1.25;' : ''}">${shown}</div>
           <div class="score-critic">${abbrev}</div>
-        </div>` : ''}
+        </div>
       </div>`;
   }).join('');
 
@@ -500,6 +522,13 @@ function renderRecentNotes(wines) {
 // ── Filtering & sorting ───────────────────────────────────────────────────────
 function wineMatches(wine) {
   const f = state.filters;
+  if (f.score > 0 && maxScore(wine) < f.score) return false;
+  return wineMatchesExceptScore(wine);
+}
+
+// Tous les filtres sauf le score minimum (la vue Nouvelles notes l'applique note par note)
+function wineMatchesExceptScore(wine) {
+  const f = state.filters;
 
   if (f.search) {
     const q = norm(f.search);
@@ -526,7 +555,6 @@ function wineMatches(wine) {
     }
   }
 
-  if (f.score > 0 && maxScore(wine) < f.score) return false;
 
   if (f.pays !== 'tous' && norm(wine['Pays']) !== f.pays) return false;
 
@@ -691,6 +719,7 @@ function bindEvents(container) {
 }
 
 function renderGrid() {
+  if (state.news) renderNewsView();
   currentPage = 1;
   lastFiltered = sortWines(state.wines.filter(wineMatches));
   const grid = document.getElementById('wineGrid');
@@ -777,6 +806,120 @@ function updateMultiBar() {
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
+// ── Vue « Nouvelles notes » ───────────────────────────────────────────────────
+// Une ligne par note datée, par année / mois. Les filtres de la barre latérale
+// s'appliquent ; le score minimum porte sur la note elle-même.
+const COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+function noteMatchesFilters({ wine, note }) {
+  if (!wineMatchesExceptScore(wine)) return false;
+  if (state.filters.score > 0) {
+    const num = extractScoreNum(note.score);
+    if (num === null || num < state.filters.score) return false;
+  }
+  return true;
+}
+
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+const entryCopyLine = e => noteCopyLine(e.wine, e.note, CRITIC_ABBREV[e.note.critic] || e.note.critic);
+
+function openNewsView() {
+  // Année en cours par défaut (une date future saisie par erreur ne doit pas l'emporter)
+  state.news = { year: new Date().getFullYear(), month: null, shown: [] };
+  document.getElementById('catalogueView').classList.add('hidden');
+  document.getElementById('newsView').classList.remove('hidden');
+  renderNewsView();
+  document.querySelector('main').scrollTop = 0;
+}
+
+function closeNewsView() {
+  state.news = null;
+  document.getElementById('newsView').classList.add('hidden');
+  document.getElementById('catalogueView').classList.remove('hidden');
+}
+
+function renderNewsView() {
+  const el = document.getElementById('newsView');
+  const news = state.news;
+  const all = datedNoteEntries(state.wines).filter(noteMatchesFilters);
+  const years = yearsWithNotes(all);
+  if (!years.includes(news.year)) news.year = years[0];
+  const months = monthsWithNotes(all, news.year);
+  if (news.month && !months.has(news.month)) news.month = null;
+  news.shown = filterByPeriod(all, news.year, news.month);
+
+  const locale = state.lang === 'en' ? 'en-GB' : 'fr-FR';
+  const monthShort = new Intl.DateTimeFormat(locale, { month: 'short' });
+  const monthLong = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+  const periode = news.month ? capitalize(monthLong.format(new Date(news.year, news.month - 1, 1))) : String(news.year);
+
+  const monthBtns = [`<button type="button" class="news-month ${news.month ? '' : 'on'}" data-month="">${t('tousMois')}</button>`]
+    .concat(Array.from({ length: 12 }, (_, i) => {
+      const m = i + 1;
+      return `<button type="button" class="news-month ${news.month === m ? 'on' : ''}" data-month="${m}" ${months.has(m) ? '' : 'disabled'}>${capitalize(monthShort.format(new Date(news.year, i, 1)).replace('.', ''))}</button>`;
+    })).join('');
+
+  // Groupes par mois, du plus récent au plus ancien (les entrées sont déjà triées)
+  let rows = '';
+  let currentKey = '';
+  news.shown.forEach((e, i) => {
+    const key = `${e.date.getFullYear()}-${e.date.getMonth()}`;
+    if (key !== currentKey) {
+      currentKey = key;
+      rows += `<h3 class="news-group">${capitalize(monthLong.format(e.date))}</h3>`;
+    }
+    const w = e.wine;
+    rows += `
+      <div class="news-row ${colorCssClass(w['Couleur'])}" data-i="${i}">
+        <span class="news-row__date">${e.note.date.slice(0, 5)}</span>
+        <span class="news-row__wine">
+          <span class="news-row__domaine">${(w['Domaine ou Marque'] || '').trim()}</span>
+          <span class="news-row__name">${w['Nom du vin'] || ''} <span class="news-row__vintage">${w['Millésime'] || ''}</span></span>
+        </span>
+        ${scoreBadgeHTML(displayScore(e.note.critic, e.note.score))}
+        <button type="button" class="news-row__copy" data-copy="${i}" title="${escAttr(t('copierLaNote'))}">${COPY_ICON_SVG}</button>
+      </div>`;
+  });
+
+  el.innerHTML = `
+    <div class="news-head">
+      <button type="button" class="news-back" data-news="back">${t('retourCatalogue')}</button>
+      <h2 class="news-title">${t('nouvellesNotes')}</h2>
+      <button type="button" class="news-copy" data-news="copy" ${news.shown.length ? '' : 'disabled'}>${COPY_ICON_SVG}<span>${t('copier')}</span></button>
+    </div>
+    <div class="news-period">
+      <select class="news-year" aria-label="${escAttr(t('annee'))}">${years.map(y => `<option value="${y}" ${y === news.year ? 'selected' : ''}>${y}</option>`).join('')}</select>
+      <div class="news-months scrollbar-hide">${monthBtns}</div>
+    </div>
+    <p class="news-count">${t('nbNotes', news.shown.length, periode)}</p>
+    ${rows || `<p class="news-empty">${t('aucuneNouvelleNote')}</p>`}`;
+}
+
+function initNewsView() {
+  document.getElementById('recentNotesOpen').addEventListener('click', openNewsView);
+  document.getElementById('recentNotesAll').addEventListener('click', openNewsView);
+
+  const el = document.getElementById('newsView');
+  el.addEventListener('click', e => {
+    const target = e.target.closest('button, .news-row');
+    if (!target || !state.news) return;
+    const shown = state.news.shown;
+    if (target.dataset.news === 'back') closeNewsView();
+    else if (target.dataset.news === 'copy') copyToClipboard(shown.map(entryCopyLine).join('\n'));
+    else if (target.classList.contains('news-month')) {
+      state.news.month = target.dataset.month ? +target.dataset.month : null;
+      renderNewsView();
+    } else if (target.dataset.copy !== undefined) copyToClipboard(entryCopyLine(shown[+target.dataset.copy]));
+    else if (target.classList.contains('news-row')) openModal(state.wines.indexOf(shown[+target.dataset.i].wine));
+  });
+  el.addEventListener('change', e => {
+    if (!e.target.classList.contains('news-year')) return;
+    state.news.year = +e.target.value;
+    state.news.month = null;
+    renderNewsView();
+  });
+}
+
 function openModal(idx) {
   const wine = state.wines[idx];
   if (!wine) return;
@@ -797,19 +940,26 @@ function openModal(idx) {
   document.getElementById('modalMeta').textContent =
     `${wine['Millésime'] || '—'} · ${(wine['Couleur'] || '').trim()} · ${(wine['Pays'] || '').trim()}`;
 
-  // Scores — meme classement que les badges ; la fiche affiche la valeur brute
+  // Notes — les plus récentes d'abord (mois + badge « Nouveau »), puis l'historique
+  // dans le même classement que les badges. La fiche affiche la valeur brute
   // ("OR (CDG)") mais reprend la couleur de la medaille.
-  const scores = getDisplayScores(wine);
+  const rankedCritics = getDisplayScores(wine).map(e => e.col);
+  const notes = orderNotesForModal(wine._notes.filter(n => n.critic && (n.score || '').trim()), rankedCritics);
+  const monthFmt = monthFormatter();
 
-  document.getElementById('modalScores').innerHTML = scores.length
+  document.getElementById('modalScores').innerHTML = notes.length
     ? `<div class="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-2">${t('notesCritiques')}</div>
-       <div>${scores.map(({ col, val, cls }) => {
+       <div>${notes.map(note => {
+         const { col, val, cls } = displayScore(note.critic, note.score);
          const abbrev = CRITIC_ABBREV[col] || col;
-         const comment = wine._comments && wine._comments[col];
+         const date = parseFrDate(note.date);
+         const dateHTML = date
+           ? ` <span class="modal-note-date">${monthFmt.format(date)}</span>${isNewNote(note) ? ` <span class="badge-new">${t('nouveau')}</span>` : ''}`
+           : '';
          return `<div class="modal-score-row">
-           <span class="modal-critic-name">${col} <span class="text-slate-400 text-xs">(${abbrev})</span></span>
+           <span class="modal-critic-name">${col} <span class="text-slate-400 text-xs">(${abbrev})</span>${dateHTML}</span>
            <span class="modal-score-val ${cls}">${val}</span>
-         </div>${comment ? `<div class="text-xs text-slate-400 italic mb-2" style="padding-left:2px">${comment}</div>` : ''}`;
+         </div>${note.comment ? `<div class="text-xs text-slate-400 italic mb-2" style="padding-left:2px">${note.comment}</div>` : ''}`;
        }).join('')}</div>`
     : `<div class="text-sm text-slate-400 italic">${t('aucuneNote')}.</div>`;
 
@@ -1024,8 +1174,9 @@ function initAdminPanel() {
     return `
       <div class="admin-note-row" data-i="${i}" style="border:1px solid #334155;border-radius:8px;padding:8px;margin-bottom:8px">
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <select class="note-critic" style="flex:2;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px">${options}</select>
-          <input class="note-score" value="${note.score || ''}" placeholder="Note (ex. 93)" style="flex:1;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px" />
+          <select class="note-critic" style="flex:2;min-width:0;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px">${options}</select>
+          <input class="note-score" value="${note.score || ''}" placeholder="Note (ex. 93)" style="flex:1;min-width:0;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px" />
+          <input class="note-date" type="date" value="${frToIso(note.date)}" title="Date de réception (vide = note historique)" style="flex:none;width:132px;background:#0f172a;border:1px solid #334155;color:#f8fafc;color-scheme:dark;border-radius:6px;font-size:0.72rem;padding:5px" />
           <button class="note-delete" title="Supprimer" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px">✕</button>
         </div>
         <textarea class="note-comment" placeholder="Commentaire de dégustation (optionnel)" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:6px;font-size:0.72rem;padding:5px;min-height:44px">${note.comment || ''}</textarea>
@@ -1039,6 +1190,7 @@ function initAdminPanel() {
       row.querySelector('.note-critic').addEventListener('change', e => { adminNotesDraft[i].critic = e.target.value; });
       row.querySelector('.note-score').addEventListener('input', e => { adminNotesDraft[i].score = e.target.value; });
       row.querySelector('.note-comment').addEventListener('input', e => { adminNotesDraft[i].comment = e.target.value; });
+      row.querySelector('.note-date').addEventListener('input', e => { adminNotesDraft[i].date = isoToFr(e.target.value); });
       row.querySelector('.note-delete').addEventListener('click', () => {
         adminNotesDraft.splice(i, 1);
         renderNotesDraft();
@@ -1047,7 +1199,7 @@ function initAdminPanel() {
   }
 
   addNoteBtn.addEventListener('click', () => {
-    adminNotesDraft.push({ critic: CRITIC_NAMES[0], score: '', comment: '' });
+    adminNotesDraft.push({ critic: CRITIC_NAMES[0], score: '', comment: '', date: todayFr() });
     renderNotesDraft();
   });
 
@@ -1058,8 +1210,9 @@ function initAdminPanel() {
     document.getElementById('fNom').value = wine?.['Nom du vin'] || '';
     document.getElementById('fMillesime').value = wine?.['Millésime'] || '';
     document.getElementById('fAvailable').checked = isInStock(wine || {});
-    document.getElementById('fDateAjout').value = wine?.['date_ajout'] || '';
-    adminNotesDraft = (wine?._notes || []).map(n => ({ ...n }));
+    // Fiche datée mais pas encore rattrapée : sa date passe sur la dernière note,
+    // sinon l'enregistrement effacerait date_ajout pour de bon
+    adminNotesDraft = datedFromLegacy(wine?._notes || [], wine?.['date_ajout']);
     renderNotesDraft();
   }
 
@@ -1097,11 +1250,15 @@ function initAdminPanel() {
     const milInput = document.getElementById('fMillesime');
     milInput.value = '';
     milInput.focus();
+    // Les notes copiées ne sont pas de nouvelles notes
+    adminNotesDraft.forEach(n => { n.date = ''; });
+    renderNotesDraft();
   }
 
   function readForm() {
     const paysMap = { france: 'France', argentine: 'Argentine', espagne: 'Espagne', chili: 'Chili' };
     const couleurMap = { rouge: 'Rouge', blanc: 'Blanc', 'rosé': 'Rosé', autre: 'Autre' };
+    const notes = adminNotesDraft.filter(n => n.critic && n.score).map(cleanNote);
     return {
       'Pays': paysMap[document.getElementById('fPays').value] || '',
       'Domaine ou Marque': document.getElementById('fDomaine').value.trim(),
@@ -1109,10 +1266,9 @@ function initAdminPanel() {
       'Nom du vin': document.getElementById('fNom').value.trim(),
       'Millésime': document.getElementById('fMillesime').value.trim(),
       'Available': document.getElementById('fAvailable').checked ? 'x' : '',
-      'date_ajout': document.getElementById('fDateAjout').value.trim(),
-      notes: adminNotesDraft
-        .filter(n => n.critic && n.score)
-        .map(n => ({ critic: n.critic, score: n.score.trim(), comment: (n.comment || '').trim() })),
+      // La date de la fiche suit toujours sa note la plus récente
+      'date_ajout': latestNoteDate(notes),
+      notes,
     };
   }
 
@@ -1196,6 +1352,7 @@ async function init() {
   renderRecentNotes(state.wines);
   renderGrid();
   initAdminPanel();
+  initNewsView();
   applyStockFeature();
 
   // Search
@@ -1321,6 +1478,8 @@ function applyLang() {
   // Recent notes title
   const rn = document.getElementById('recentNotesTitle');
   if (rn) rn.textContent = t('dernieresNotes');
+  const rnAll = document.getElementById('recentNotesAll');
+  if (rnAll) rnAll.textContent = t('toutVoir');
   // Modal copy button
   const mcb = document.getElementById('modalCopyBtn');
   if (mcb) mcb.lastChild.textContent = ' ' + t('copierNotes');
