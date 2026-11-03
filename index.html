@@ -90,8 +90,14 @@
     <aside id="sidebar"
       class="w-64 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col overflow-hidden h-[calc(100vh-72px)]">
 
+      <!-- En-tête : réinitialisation (visible seulement si un filtre est actif) -->
+      <div class="sidebar-head px-4 pt-4 flex-shrink-0">
+        <p class="sidebar-head__title" data-i18n="filtres">Filtres</p>
+        <button type="button" id="resetFilters" class="reset-btn hidden"></button>
+      </div>
+
       <!-- Sections fixes -->
-      <div class="px-4 pt-4 space-y-3 flex-shrink-0">
+      <div class="px-4 pt-3 space-y-3 flex-shrink-0">
 
         <div>
           <p class="filter-section-title" data-i18n="pays">Pays</p>
@@ -110,10 +116,30 @@
 
       </div>
 
-      <!-- Domaine — flex-1 sur desktop, normal sur mobile -->
-      <div class="sidebar-domaine-section px-4 mt-3">
-        <p class="filter-section-title" data-i18n="domaine">Domaine</p>
-        <div class="mt-2 space-y-1 scrollbar-hide" id="filterDomaine"></div>
+      <!-- Domaine + Critiques — sections repliables avec recherche -->
+      <div class="sidebar-domaine-section px-4 mt-3 space-y-1">
+        <div class="facet" id="facetDomaine">
+          <button type="button" class="facet__toggle" aria-expanded="false">
+            <span class="filter-section-title" data-i18n="domaine">Domaine</span>
+            <span class="facet__summary"></span>
+            <svg class="facet__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="facet__body hidden">
+            <input type="text" class="facet__search" data-i18n-ph="rechercherDomaine" placeholder="Rechercher un domaine…" autocomplete="off" />
+            <div class="mt-2 space-y-1 scrollbar-hide facet__list" id="filterDomaine"></div>
+          </div>
+        </div>
+        <div class="facet" id="facetCritic">
+          <button type="button" class="facet__toggle" aria-expanded="false">
+            <span class="filter-section-title" data-i18n="critiques">Critiques</span>
+            <span class="facet__summary"></span>
+            <svg class="facet__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="facet__body hidden">
+            <input type="text" class="facet__search" data-i18n-ph="rechercherCritique" placeholder="Rechercher un critique…" autocomplete="off" />
+            <div class="mt-2 space-y-1 scrollbar-hide facet__list" id="filterCritic"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Score — toujours visible en bas (sticky) -->
@@ -167,6 +193,9 @@
         </div>
       </div>
 
+      <!-- Filtres actifs (pastilles) -->
+      <div id="activeFilters" class="active-filters px-4 sm:px-6 mb-3 hidden"></div>
+
       <!-- Grid header -->
       <div class="px-4 sm:px-6 flex items-center justify-between mb-3 gap-3">
         <p id="resultCount" class="text-xs font-semibold text-slate-500 uppercase tracking-widest flex-shrink-0"></p>
@@ -184,12 +213,14 @@
               </svg>
             </button>
           </div>
-          <select id="sortSelect" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400">
-            <option value="score">Meilleur score</option>
-            <option value="name">Nom A–Z</option>
-            <option value="domaine">Domaine A–Z</option>
-            <option value="millesime">Millésime ↓</option>
-          </select>
+          <!-- Tri : bouton + menu (remplace la liste déroulante du navigateur) -->
+          <div class="sort-menu" id="sortMenu">
+            <button type="button" id="sortBtn" class="sort-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span id="sortLabel"></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="sortPop" class="sort-pop hidden" role="listbox"></div>
+          </div>
         </div>
       </div>
 
