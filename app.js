@@ -168,7 +168,7 @@ const state = {
   lang: localStorage.getItem('wt-lang') || (navigator.language.startsWith('fr') ? 'fr' : 'en'),
   filters: {
     search: '', score: 0,
-    pays: 'tous',
+    pays: new Set(),
     couleur: new Set(),
     domaine: new Set(),
     critic: new Set(), // noms exacts des critiques
@@ -389,43 +389,15 @@ function countsFor(key, wines, normalize) {
 }
 
 // ── Sidebar filters ───────────────────────────────────────────────────────────
-function buildPaysFilter(wines) {
-  const el = document.getElementById('filterPays');
-  const counts = countsFor('Pays', wines, v => v.trim());
-  const allCount = wines.length;
-
-  let html = `<button class="pays-btn ${state.filters.pays === 'tous' ? 'active' : ''}" data-pays="tous">
-    <span>Tous</span><span class="count">${allCount}</span>
-  </button>`;
-
-  Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([pays, cnt]) => {
-    const key = norm(pays);
-    const flag = COUNTRY_FLAG[key] || '';
-    const active = state.filters.pays === key ? 'active' : '';
-    html += `<button class="pays-btn ${active}" data-pays="${key}">
-      <span>${flag} ${pays}</span><span class="count">${cnt}</span>
-    </button>`;
-  });
-  el.innerHTML = html;
-
-  el.querySelectorAll('.pays-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.filters.pays = btn.dataset.pays;
-      el.querySelectorAll('.pays-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderGrid();
-    });
-  });
-}
-
-function buildCheckFilter(containerId, wines, fieldKey, filterSetKey, dotClass) {
+// pickColor(valeurNormalisée) → couleur CSS : affiche des pastilles au lieu de cases
+function buildCheckFilter(containerId, wines, fieldKey, filterSetKey, pickColor) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const counts = countsFor(fieldKey, wines, v => v.trim());
   el.innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([val, cnt]) => {
-    const dot = dotClass ? `<span class="${dotClass(norm(val))}"></span>` : '';
-    return `<label class="filter-check" title="${escAttr(val.trim())}">
-      <span class="lhs">${dot}<input type="checkbox" class="fcheck" data-key="${filterSetKey}" data-val="${norm(val)}" ${state.filters[filterSetKey].has(norm(val)) ? 'checked' : ''} /><span class="fc-name">${val.trim()}</span></span>
+    const dot = pickColor ? `<span class="pick-dot" style="--c:${pickColor(norm(val))}"></span>` : '';
+    return `<label class="filter-check${pickColor ? ' pick' : ''}" title="${escAttr(val.trim())}">
+      <span class="lhs"><input type="checkbox" class="fcheck" data-key="${filterSetKey}" data-val="${norm(val)}" ${state.filters[filterSetKey].has(norm(val)) ? 'checked' : ''} />${dot}<span class="fc-name">${val.trim()}</span></span>
       <span class="count">${cnt}</span>
     </label>`;
   }).join('');
@@ -446,12 +418,12 @@ function buildAvailFilter(wines) {
   const inStock = wines.filter(isInStock).length;
   const epuise = wines.length - inStock;
   el.innerHTML = `
-    <label class="filter-check">
-      <span class="lhs"><span class="dot-stock"></span><input type="checkbox" class="avail-check" value="stock" ${state.filters.avail.has('stock') ? 'checked' : ''}/> ${t('enStock')}</span>
+    <label class="filter-check pick">
+      <span class="lhs"><input type="checkbox" class="avail-check" value="stock" ${state.filters.avail.has('stock') ? 'checked' : ''}/><span class="pick-dot" style="--c:var(--accent)"></span><span class="fc-name">${t('enStock')}</span></span>
       <span class="count">${inStock}</span>
     </label>
-    <label class="filter-check">
-      <span class="lhs"><span class="dot-epuise"></span><input type="checkbox" class="avail-check" value="epuise" ${state.filters.avail.has('epuise') ? 'checked' : ''}/> ${t('epuise')}</span>
+    <label class="filter-check pick">
+      <span class="lhs"><input type="checkbox" class="avail-check" value="epuise" ${state.filters.avail.has('epuise') ? 'checked' : ''}/><span class="pick-dot" style="--c:var(--wine-autre)"></span><span class="fc-name">${t('epuise')}</span></span>
       <span class="count">${epuise}</span>
     </label>`;
   el.querySelectorAll('.avail-check').forEach(cb => {
@@ -464,14 +436,9 @@ function buildAvailFilter(wines) {
 }
 
 function initFilters(wines) {
-  buildPaysFilter(wines);
+  buildCheckFilter('filterPays', wines, 'Pays', 'pays', () => 'var(--accent)');
   buildAvailFilter(wines);
-  buildCheckFilter('filterCouleur', wines, 'Couleur', 'couleur', c => {
-    if (c === 'rouge') return 'dot-rouge';
-    if (c === 'blanc') return 'dot-blanc';
-    if (c === 'rosé' || c === 'rose') return 'dot-rose';
-    return 'dot-autre';
-  });
+  buildCheckFilter('filterCouleur', wines, 'Couleur', 'couleur', c => `var(--wine-${colorCssClass(c).slice(6)})`);
   buildCheckFilter('filterDomaine', wines, 'Domaine ou Marque', 'domaine', null);
   buildCriticFilter(wines);
 }
@@ -529,7 +496,7 @@ function activeFilterChips() {
   const chips = [];
   const label = (set, map) => [...set].map(v => ({ v, text: map(v) }));
   if (f.search.trim()) chips.push({ type: 'search', text: `« ${f.search.trim()} »` });
-  if (f.pays !== 'tous') chips.push({ type: 'pays', v: f.pays, text: t('countries')[f.pays] || f.pays });
+  label(f.pays, v => t('countries')[v] || v).forEach(c => chips.push({ type: 'pays', ...c }));
   label(f.couleur, v => t('colors')[v] || v).forEach(c => chips.push({ type: 'couleur', ...c }));
   label(f.avail, v => v === 'stock' ? t('enStock') : t('epuise')).forEach(c => chips.push({ type: 'avail', ...c }));
   label(f.domaine, v => (state.wines.find(w => norm(w['Domaine ou Marque']) === v)?.['Domaine ou Marque'] || v).trim())
@@ -542,7 +509,6 @@ function activeFilterChips() {
 // Remet les contrôles de la barre latérale en accord avec state.filters
 function syncFilterControls() {
   const f = state.filters;
-  document.querySelectorAll('.pays-btn').forEach(b => b.classList.toggle('active', b.dataset.pays === f.pays));
   document.querySelectorAll('.fcheck').forEach(cb => { cb.checked = f[cb.dataset.key].has(cb.dataset.val); });
   document.querySelectorAll('.avail-check').forEach(cb => { cb.checked = f.avail.has(cb.value); });
   document.querySelectorAll('.score-btn').forEach(b => b.classList.toggle('active', +b.dataset.score === f.score));
@@ -552,7 +518,6 @@ function syncFilterControls() {
 function removeFilter(type, v) {
   const f = state.filters;
   if (type === 'search') f.search = '';
-  else if (type === 'pays') f.pays = 'tous';
   else if (type === 'score') f.score = 0;
   else f[type].delete(v);
   syncFilterControls();
@@ -561,8 +526,8 @@ function removeFilter(type, v) {
 
 function resetFilters() {
   const f = state.filters;
-  f.search = ''; f.pays = 'tous'; f.score = 0;
-  ['couleur', 'domaine', 'critic', 'avail'].forEach(k => f[k].clear());
+  f.search = ''; f.score = 0;
+  ['pays', 'couleur', 'domaine', 'critic', 'avail'].forEach(k => f[k].clear());
   syncFilterControls();
   renderGrid();
 }
@@ -683,7 +648,7 @@ function wineMatchesExceptScore(wine) {
   }
 
 
-  if (f.pays !== 'tous' && norm(wine['Pays']) !== f.pays) return false;
+  if (f.pays.size && !f.pays.has(norm(wine['Pays']))) return false;
 
   if (f.couleur.size && !f.couleur.has(norm(wine['Couleur']))) return false;
 
@@ -767,11 +732,11 @@ function renderRow(wine, originalIdx) {
   const badgesHTML = buildBadgesHTML(wine);
 
   const colorDot = {
-    'color-rouge': '#c0392b',
-    'color-blanc': '#C9A84C',
-    'color-rose':  '#db2777',
-    'color-autre': '#94a3b8',
-  }[colorClass] || '#94a3b8';
+    'color-rouge': 'var(--wine-rouge)',
+    'color-blanc': 'var(--wine-blanc)',
+    'color-rose':  'var(--wine-rose)',
+    'color-autre': 'var(--wine-autre)',
+  }[colorClass] || 'var(--wine-autre)';
 
   return `
     <div class="list-row ${isSelected ? 'selected' : ''}" data-idx="${originalIdx}">
@@ -1668,7 +1633,7 @@ async function init() {
   backdrop.addEventListener('click', closeSidebar);
 
   // Close sidebar on filter interaction (mobile UX)
-  sidebar.querySelectorAll('.pays-btn, .fcheck, .avail-check, .score-btn')
+  sidebar.querySelectorAll('.fcheck, .avail-check, .score-btn')
     .forEach(el => el.addEventListener('change', () => {
       if (window.innerWidth < 1024) closeSidebar();
     }));

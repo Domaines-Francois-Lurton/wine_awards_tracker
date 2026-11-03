@@ -9,6 +9,11 @@
   --ink-500: oklch(0.5 0.01 250);
   --ink-400: oklch(0.55 0.01 250);
   --line: oklch(0 0 0 / 0.06);
+  /* Couleurs des vins (palette « pastel ») */
+  --wine-rouge: #B0566B;
+  --wine-blanc: #DCC883;
+  --wine-rose: #F0B4B0;
+  --wine-autre: #B9B3A8;
 }
 body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
 
@@ -134,25 +139,6 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
   text-transform: uppercase;
   color: #94a3b8;
 }
-.pays-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.22rem 0.5rem;
-  border-radius: 0.4rem;
-  font-size: 0.72rem;
-  color: #475569;
-  cursor: pointer;
-  transition: background 0.1s, color 0.1s;
-  text-align: left;
-  background: transparent;
-  border: none;
-}
-.pays-btn:hover { background: #f1f5f9; color: #0f172a; }
-.pays-btn.active { background: #f1f5f9; color: #0f172a; font-weight: 600; }
-.pays-btn .count { font-size: 0.65rem; color: #94a3b8; }
-.pays-btn.active .count { color: #64748b; }
 
 .filter-check {
   display: flex;
@@ -182,6 +168,18 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
 #sidebar { scrollbar-gutter: stable; }
 .filter-check .count { font-size: 0.65rem; color: #94a3b8; }
 
+/* Pastille : la case à cocher est remplacée par un rond de couleur (--c),
+   vide si non choisi, plein si choisi. La case reste là pour le clavier. */
+.filter-check.pick { padding: 0.24rem 0.5rem; margin: 0 -0.5rem; border-radius: 0.45rem; }
+.filter-check.pick:hover { background: #f1f5f9; }
+.filter-check.pick input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.pick-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--c); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s; }
+.filter-check.pick:has(input:checked) { color: #0f172a; font-weight: 600; }
+.filter-check.pick:has(input:checked) .count { color: #64748b; }
+.filter-check.pick:has(input:checked) .pick-dot { background: var(--c); }
+.filter-check.pick:has(input:checked) .pick-dot::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #fff; }
+.filter-check.pick:has(input:focus-visible) .pick-dot { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .score-btn {
   font-size: 0.7rem;
   font-weight: 600;
@@ -197,12 +195,6 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
 .score-btn:hover { border-color: #94a3b8; color: #0f172a; }
 .score-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
 
-.dot-rouge { width: 8px; height: 8px; border-radius: 50%; background: #b91c1c; flex-shrink: 0; }
-.dot-blanc { width: 8px; height: 8px; border-radius: 50%; background: #c8c46a; border: 1px solid #bab66a; flex-shrink: 0; }
-.dot-rose  { width: 8px; height: 8px; border-radius: 50%; background: #ec4899; flex-shrink: 0; }
-.dot-autre { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
-.dot-stock { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
-.dot-epuise{ width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #94a3b8; flex-shrink: 0; }
 
 /* ══ WINE CARD ══ */
 .wine-card {
@@ -223,10 +215,10 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
 }
 .wine-card.selected { outline: 2px solid #0f172a; outline-offset: -2px; }
 
-.wine-card.color-rouge { border-left-color: #c0392b; }
-.wine-card.color-blanc { border-left-color: #C9A84C; }
-.wine-card.color-rose  { border-left-color: #db2777; }
-.wine-card.color-autre { border-left-color: #94a3b8; }
+.wine-card.color-rouge { border-left-color: var(--wine-rouge); }
+.wine-card.color-blanc { border-left-color: var(--wine-blanc); }
+.wine-card.color-rose  { border-left-color: var(--wine-rose); }
+.wine-card.color-autre { border-left-color: var(--wine-autre); }
 
 /* Domaine + checkbox */
 .card-row-top {
@@ -560,18 +552,18 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
   transition: box-shadow 0.12s;
 }
 .recent-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.07); }
-.recent-card.color-rouge { border-left-color: #c0392b; }
-.recent-card.color-blanc { border-left-color: #C9A84C; }
-.recent-card.color-rose  { border-left-color: #db2777; }
-.recent-card.color-autre { border-left-color: #94a3b8; }
+.recent-card.color-rouge { border-left-color: var(--wine-rouge); }
+.recent-card.color-blanc { border-left-color: var(--wine-blanc); }
+.recent-card.color-rose  { border-left-color: var(--wine-rose); }
+.recent-card.color-autre { border-left-color: var(--wine-autre); }
 .recent-card .big-score { font-size: 1.35rem; font-weight: 800; line-height: 1; color: #0f172a; }
 .recent-card .score-critic { font-size: 0.58rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 2px; text-align: right; }
 
 /* ── Modal ── */
-.modal-color-rouge { border-left-color: #c0392b !important; }
-.modal-color-blanc { border-left-color: #C9A84C !important; }
-.modal-color-rose  { border-left-color: #db2777 !important; }
-.modal-color-autre { border-left-color: #94a3b8 !important; }
+.modal-color-rouge { border-left-color: var(--wine-rouge) !important; }
+.modal-color-blanc { border-left-color: var(--wine-blanc) !important; }
+.modal-color-rose  { border-left-color: var(--wine-rose) !important; }
+.modal-color-autre { border-left-color: var(--wine-autre) !important; }
 
 .modal-score-row {
   display: flex;
@@ -654,9 +646,9 @@ body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
   border-left: 3px solid #94a3b8; box-shadow: 0 1px 2px oklch(0 0 0 / 0.04);
 }
 .news-row:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.07); }
-.news-row.color-rouge { border-left-color: #c0392b; }
-.news-row.color-blanc { border-left-color: #C9A84C; }
-.news-row.color-rose  { border-left-color: #db2777; }
+.news-row.color-rouge { border-left-color: var(--wine-rouge); }
+.news-row.color-blanc { border-left-color: var(--wine-blanc); }
+.news-row.color-rose  { border-left-color: var(--wine-rose); }
 .news-row__date { font-size: 12px; font-weight: 600; color: var(--ink-400); font-variant-numeric: tabular-nums; }
 .news-row__wine { display: flex; flex-direction: column; min-width: 0; }
 .news-row__domaine { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
