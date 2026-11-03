@@ -5,7 +5,7 @@
   <link rel="alternate icon" href="favicon.ico" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wine Awards Tracker - Domaines François Lurton</title>
+  <title>Wine Awards Tracker - François Lurton</title>
   <meta name="description" content="Internal dashboard tracking all tasting scores across Domaines François Lurton wines — critics worldwide." />
 
   <!-- Open Graph -->
@@ -39,7 +39,7 @@
       </button>
       <!-- Logo : retour à l'accueil (recharge le site, filtres remis à zéro) -->
       <a class="brand" href="./" title="Wine Awards Tracker">
-        <span class="brand__mark" aria-hidden="true">WA</span>
+        <span class="brand__mark" aria-hidden="true"></span>
         <span class="brand__text">
           <span class="brand__name">Wine Awards Tracker</span>
           <span class="brand__version">v2.0</span>
@@ -55,8 +55,12 @@
       <input id="searchInput" type="text" placeholder="Rechercher un vin, domaine, critique, note…" autocomplete="off" class="header-search__input" />
     </div>
 
-    <!-- Langue + Export + Admin -->
+    <!-- Nouvelles notes + Langue + Export + Admin -->
     <div class="site-header__actions">
+      <button id="newsHeaderBtn" class="header-link header-link--news" title="Nouvelles notes">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>
+        <span class="hidden sm:inline" id="newsHeaderLabel">Nouvelles notes</span>
+      </button>
       <div class="lang-switch">
         <button id="langFr" class="lang-btn">FR</button>
         <button id="langEn" class="lang-btn">EN</button>

@@ -828,6 +828,7 @@ function openNewsView() {
   state.news = { year: new Date().getFullYear(), month: null, shown: [] };
   document.getElementById('catalogueView').classList.add('hidden');
   document.getElementById('newsView').classList.remove('hidden');
+  document.getElementById('newsHeaderBtn').classList.add('is-active');
   renderNewsView();
   document.querySelector('main').scrollTop = 0;
 }
@@ -836,6 +837,7 @@ function closeNewsView() {
   state.news = null;
   document.getElementById('newsView').classList.add('hidden');
   document.getElementById('catalogueView').classList.remove('hidden');
+  document.getElementById('newsHeaderBtn').classList.remove('is-active');
 }
 
 function renderNewsView() {
@@ -898,6 +900,9 @@ function renderNewsView() {
 function initNewsView() {
   document.getElementById('recentNotesOpen').addEventListener('click', openNewsView);
   document.getElementById('recentNotesAll').addEventListener('click', openNewsView);
+  document.getElementById('newsHeaderBtn').addEventListener('click', () => {
+    if (!state.news) openNewsView();
+  });
 
   const el = document.getElementById('newsView');
   el.addEventListener('click', e => {
@@ -1478,8 +1483,9 @@ function applyLang() {
   // Recent notes title
   const rn = document.getElementById('recentNotesTitle');
   if (rn) rn.textContent = t('dernieresNotes');
-  const rnAll = document.getElementById('recentNotesAll');
-  if (rnAll) rnAll.textContent = t('toutVoir');
+  document.getElementById('recentNotesAll').textContent = t('toutVoir');
+  const nh = document.getElementById('newsHeaderBtn');
+  if (nh) { nh.title = t('nouvellesNotes'); document.getElementById('newsHeaderLabel').textContent = t('nouvellesNotes'); }
   // Modal copy button
   const mcb = document.getElementById('modalCopyBtn');
   if (mcb) mcb.lastChild.textContent = ' ' + t('copierNotes');
