@@ -86,6 +86,14 @@ const T = {
     liste: 'Liste',
     nouveau: 'Nouveau',
     toutVoir: 'Tout voir →',
+    filtres: 'Filtres',
+    critiques: 'Critiques',
+    reinitialiser: n => `Réinitialiser (${n})`,
+    toutEffacer: 'Tout effacer',
+    rechercherDomaine: 'Rechercher un domaine…',
+    rechercherCritique: 'Rechercher un critique…',
+    trier: 'Trier :',
+    retirerFiltre: 'Retirer ce filtre',
     nouvellesNotes: 'Nouvelles notes',
     retourCatalogue: 'Retour au catalogue',
     tousMois: 'Tous',
@@ -127,6 +135,14 @@ const T = {
     liste: 'List',
     nouveau: 'New',
     toutVoir: 'See all →',
+    filtres: 'Filters',
+    critiques: 'Critics',
+    reinitialiser: n => `Reset (${n})`,
+    toutEffacer: 'Clear all',
+    rechercherDomaine: 'Search estate…',
+    rechercherCritique: 'Search critic…',
+    trier: 'Sort:',
+    retirerFiltre: 'Remove this filter',
     nouvellesNotes: 'New scores',
     retourCatalogue: 'Back to catalogue',
     tousMois: 'All',
@@ -154,6 +170,7 @@ const state = {
     pays: 'tous',
     couleur: new Set(),
     domaine: new Set(),
+    critic: new Set(), // noms exacts des critiques
     avail: new Set(),
   },
   sort: 'score',
@@ -406,8 +423,8 @@ function buildCheckFilter(containerId, wines, fieldKey, filterSetKey, dotClass) 
   const counts = countsFor(fieldKey, wines, v => v.trim());
   el.innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([val, cnt]) => {
     const dot = dotClass ? `<span class="${dotClass(norm(val))}"></span>` : '';
-    return `<label class="filter-check">
-      <span class="lhs">${dot}<input type="checkbox" class="fcheck" data-key="${filterSetKey}" data-val="${norm(val)}" />${val.trim()}</span>
+    return `<label class="filter-check" title="${escAttr(val.trim())}">
+      <span class="lhs">${dot}<input type="checkbox" class="fcheck" data-key="${filterSetKey}" data-val="${norm(val)}" ${state.filters[filterSetKey].has(norm(val)) ? 'checked' : ''} /><span class="fc-name">${val.trim()}</span></span>
       <span class="count">${cnt}</span>
     </label>`;
   }).join('');
@@ -429,11 +446,11 @@ function buildAvailFilter(wines) {
   const epuise = wines.length - inStock;
   el.innerHTML = `
     <label class="filter-check">
-      <span class="lhs"><span class="dot-stock"></span><input type="checkbox" class="avail-check" value="stock"/> ${t('enStock')}</span>
+      <span class="lhs"><span class="dot-stock"></span><input type="checkbox" class="avail-check" value="stock" ${state.filters.avail.has('stock') ? 'checked' : ''}/> ${t('enStock')}</span>
       <span class="count">${inStock}</span>
     </label>
     <label class="filter-check">
-      <span class="lhs"><span class="dot-epuise"></span><input type="checkbox" class="avail-check" value="epuise"/> ${t('epuise')}</span>
+      <span class="lhs"><span class="dot-epuise"></span><input type="checkbox" class="avail-check" value="epuise" ${state.filters.avail.has('epuise') ? 'checked' : ''}/> ${t('epuise')}</span>
       <span class="count">${epuise}</span>
     </label>`;
   el.querySelectorAll('.avail-check').forEach(cb => {
@@ -455,6 +472,115 @@ function initFilters(wines) {
     return 'dot-autre';
   });
   buildCheckFilter('filterDomaine', wines, 'Domaine ou Marque', 'domaine', null);
+  buildCriticFilter(wines);
+}
+
+// Critiques : nombre de vins notés par chacun, les plus fréquents d'abord
+function buildCriticFilter(wines) {
+  const el = document.getElementById('filterCritic');
+  const counts = {};
+  wines.forEach(w => {
+    new Set(w._notes.filter(n => n.critic && (n.score || '').trim()).map(n => n.critic))
+      .forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+  });
+  el.innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([critic, cnt]) => {
+    const abbrev = CRITIC_ABBREV[critic] || '';
+    return `<label class="filter-check" title="${escAttr(critic)}" data-search="${escAttr(norm(`${critic} ${abbrev}`))}">
+      <span class="lhs"><input type="checkbox" class="fcheck" data-key="critic" data-val="${escAttr(critic)}" ${state.filters.critic.has(critic) ? 'checked' : ''} /><span class="fc-name">${critic}</span>${abbrev && abbrev !== critic ? `<span class="fc-abbrev">(${abbrev})</span>` : ''}</span>
+      <span class="count">${cnt}</span>
+    </label>`;
+  }).join('');
+
+  el.querySelectorAll('.fcheck').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) state.filters.critic.add(cb.dataset.val);
+      else state.filters.critic.delete(cb.dataset.val);
+      renderGrid();
+    });
+  });
+  applyFacetSearch(document.getElementById('facetCritic'));
+}
+
+// ── Filtres actifs : sections repliables, pastilles, réinitialisation ─────────
+function applyFacetSearch(facet) {
+  const q = norm(facet.querySelector('.facet__search').value);
+  facet.querySelectorAll('.facet__list .filter-check').forEach(label => {
+    const hay = label.dataset.search || norm(label.textContent);
+    label.style.display = !q || hay.includes(q) ? '' : 'none';
+  });
+}
+
+function initFacets() {
+  document.querySelectorAll('.facet').forEach(facet => {
+    const toggle = facet.querySelector('.facet__toggle');
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      facet.querySelector('.facet__body').classList.toggle('hidden', !open);
+      if (open) facet.querySelector('.facet__search').focus();
+    });
+    facet.querySelector('.facet__search').addEventListener('input', () => applyFacetSearch(facet));
+  });
+}
+
+function activeFilterChips() {
+  const f = state.filters;
+  const chips = [];
+  const label = (set, map) => [...set].map(v => ({ v, text: map(v) }));
+  if (f.search.trim()) chips.push({ type: 'search', text: `« ${f.search.trim()} »` });
+  if (f.pays !== 'tous') chips.push({ type: 'pays', v: f.pays, text: t('countries')[f.pays] || f.pays });
+  label(f.couleur, v => t('colors')[v] || v).forEach(c => chips.push({ type: 'couleur', ...c }));
+  label(f.avail, v => v === 'stock' ? t('enStock') : t('epuise')).forEach(c => chips.push({ type: 'avail', ...c }));
+  label(f.domaine, v => (state.wines.find(w => norm(w['Domaine ou Marque']) === v)?.['Domaine ou Marque'] || v).trim())
+    .forEach(c => chips.push({ type: 'domaine', ...c }));
+  label(f.critic, v => v).forEach(c => chips.push({ type: 'critic', ...c }));
+  if (f.score > 0) chips.push({ type: 'score', text: `${f.score}+` });
+  return chips;
+}
+
+// Remet les contrôles de la barre latérale en accord avec state.filters
+function syncFilterControls() {
+  const f = state.filters;
+  document.querySelectorAll('.pays-btn').forEach(b => b.classList.toggle('active', b.dataset.pays === f.pays));
+  document.querySelectorAll('.fcheck').forEach(cb => { cb.checked = f[cb.dataset.key].has(cb.dataset.val); });
+  document.querySelectorAll('.avail-check').forEach(cb => { cb.checked = f.avail.has(cb.value); });
+  document.querySelectorAll('.score-btn').forEach(b => b.classList.toggle('active', +b.dataset.score === f.score));
+  document.getElementById('searchInput').value = f.search;
+}
+
+function removeFilter(type, v) {
+  const f = state.filters;
+  if (type === 'search') f.search = '';
+  else if (type === 'pays') f.pays = 'tous';
+  else if (type === 'score') f.score = 0;
+  else f[type].delete(v);
+  syncFilterControls();
+  renderGrid();
+}
+
+function resetFilters() {
+  const f = state.filters;
+  f.search = ''; f.pays = 'tous'; f.score = 0;
+  ['couleur', 'domaine', 'critic', 'avail'].forEach(k => f[k].clear());
+  syncFilterControls();
+  renderGrid();
+}
+
+function updateFilterUI() {
+  const chips = activeFilterChips();
+  const bar = document.getElementById('activeFilters');
+  bar.classList.toggle('hidden', !chips.length);
+  bar.innerHTML = chips.map(c => `<button type="button" class="filter-chip" data-type="${c.type}" data-v="${escAttr(c.v ?? '')}" title="${escAttr(t('retirerFiltre'))}">${c.text}<span aria-hidden="true">×</span></button>`).join('')
+    + (chips.length ? `<button type="button" class="filter-chip-clear">${t('toutEffacer')}</button>` : '');
+
+  const reset = document.getElementById('resetFilters');
+  reset.classList.toggle('hidden', !chips.length);
+  reset.textContent = t('reinitialiser', chips.length);
+
+  [['facetDomaine', 'domaine'], ['facetCritic', 'critic']].forEach(([id, key]) => {
+    const n = state.filters[key].size;
+    document.querySelector(`#${id} .facet__summary`).textContent = n ? n : '';
+  });
 }
 
 // ── Recent notes ──────────────────────────────────────────────────────────────
@@ -561,6 +687,8 @@ function wineMatchesExceptScore(wine) {
   if (f.couleur.size && !f.couleur.has(norm(wine['Couleur']))) return false;
 
   if (f.domaine.size && !f.domaine.has(norm(wine['Domaine ou Marque']))) return false;
+
+  if (f.critic.size && !wine._notes.some(n => f.critic.has(n.critic) && (n.score || '').trim())) return false;
 
   if (f.avail.size) {
     const stock = isInStock(wine);
@@ -720,6 +848,7 @@ function bindEvents(container) {
 
 function renderGrid() {
   if (state.news) renderNewsView();
+  updateFilterUI();
   currentPage = 1;
   lastFiltered = sortWines(state.wines.filter(wineMatches));
   const grid = document.getElementById('wineGrid');
@@ -806,6 +935,36 @@ function updateMultiBar() {
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
+// ── Tri ───────────────────────────────────────────────────────────────────────
+const SORT_OPTIONS = [['score', 'meilleurScore'], ['name', 'nomAZ'], ['domaine', 'domaineAZ'], ['millesime', 'millesime']];
+const CHECK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+
+function renderSortMenu() {
+  const current = SORT_OPTIONS.find(([k]) => k === state.sort) || SORT_OPTIONS[0];
+  document.getElementById('sortLabel').textContent = `${t('trier')} ${t(current[1])}`;
+  document.getElementById('sortPop').innerHTML = SORT_OPTIONS.map(([k, key]) =>
+    `<button type="button" class="sort-opt ${k === state.sort ? 'on' : ''}" role="option" aria-selected="${k === state.sort}" data-sort="${k}"><span>${t(key)}</span>${k === state.sort ? CHECK_SVG : ''}</button>`
+  ).join('');
+}
+
+function initSortMenu() {
+  const btn = document.getElementById('sortBtn');
+  const pop = document.getElementById('sortPop');
+  const setOpen = open => { pop.classList.toggle('hidden', !open); btn.setAttribute('aria-expanded', String(open)); };
+  btn.addEventListener('click', e => { e.stopPropagation(); setOpen(pop.classList.contains('hidden')); });
+  pop.addEventListener('click', e => {
+    const opt = e.target.closest('.sort-opt');
+    if (!opt) return;
+    state.sort = opt.dataset.sort;
+    renderSortMenu();
+    setOpen(false);
+    renderGrid();
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('#sortMenu')) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  renderSortMenu();
+}
+
 // ── Vue « Nouvelles notes » ───────────────────────────────────────────────────
 // Une ligne par note datée, par année / mois. Les filtres de la barre latérale
 // s'appliquent ; le score minimum porte sur la note elle-même.
@@ -813,6 +972,7 @@ const COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="non
 
 function noteMatchesFilters({ wine, note }) {
   if (!wineMatchesExceptScore(wine)) return false;
+  if (state.filters.critic.size && !state.filters.critic.has(note.critic)) return false;
   if (state.filters.score > 0) {
     const num = extractScoreNum(note.score);
     if (num === null || num < state.filters.score) return false;
@@ -1377,9 +1537,15 @@ async function init() {
   });
 
   // Sort
-  document.getElementById('sortSelect').addEventListener('change', e => {
-    state.sort = e.target.value;
-    renderGrid();
+  initSortMenu();
+
+  // Filtres : sections repliables, pastilles, réinitialisation
+  initFacets();
+  document.getElementById('resetFilters').addEventListener('click', resetFilters);
+  document.getElementById('activeFilters').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (chip) removeFilter(chip.dataset.type, chip.dataset.v);
+    else if (e.target.closest('.filter-chip-clear')) resetFilters();
   });
 
   // Multi-copy
@@ -1472,14 +1638,8 @@ function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
-  // Sort select options
-  const sel = document.getElementById('sortSelect');
-  if (sel) {
-    sel.options[0].text = t('meilleurScore');
-    sel.options[1].text = t('nomAZ');
-    sel.options[2].text = t('domaineAZ');
-    sel.options[3].text = t('millesime');
-  }
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  if (document.getElementById('sortPop')) renderSortMenu();
   // Recent notes title
   const rn = document.getElementById('recentNotesTitle');
   if (rn) rn.textContent = t('dernieresNotes');
