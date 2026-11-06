@@ -77,6 +77,7 @@ const T = {
     domaineAZ: 'Domaine A–Z',
     millesime: 'Millésime ↓',
     vinsTotal: n => `${n} vin${n > 1 ? 's' : ''} trouvé${n > 1 ? 's' : ''}`,
+    exporterN: n => `Exporter les ${n} vin${n > 1 ? 's' : ''} affiché${n > 1 ? 's' : ''} (XLSX)`,
     chargement: 'Chargement…',
     aucunVin: 'Aucun vin ne correspond aux filtres.',
     voirPlus: n => `Voir plus (${n} restants)`,
@@ -126,6 +127,7 @@ const T = {
     domaineAZ: 'Estate A–Z',
     millesime: 'Vintage ↓',
     vinsTotal: n => `${n} wine${n > 1 ? 's' : ''} found`,
+    exporterN: n => `Export the ${n} wine${n > 1 ? 's' : ''} shown (XLSX)`,
     chargement: 'Loading…',
     aucunVin: 'No wines match the filters.',
     voirPlus: n => `Load more (${n} remaining)`,
@@ -821,6 +823,7 @@ function renderGrid() {
   const countEl = document.getElementById('resultCount');
 
   countEl.textContent = t('vinsTotal', lastFiltered.length);
+  document.getElementById('exportXlsxBtn').title = t('exporterN', lastFiltered.length);
 
   // Classes selon le mode
   if (state.view === 'list') {
@@ -1150,26 +1153,32 @@ function showToast() {
 // ── Export ────────────────────────────────────────────────────────────────────
 const EXPORT_META_COLS = ['Pays', 'Domaine ou Marque', 'Couleur', 'Nom du vin', 'Millésime', 'Available', 'date_ajout'];
 
-function buildExportRows() {
-  return state.wines.map(w => {
+// Exporte les vins affichés : filtres et recherche en place, dans l'ordre du tri.
+// Seuls les critiques présents dans ces vins ont une colonne.
+function buildExportRows(wines) {
+  const critics = state.criticCols.filter(c => wines.some(w => w[c]));
+  const header = [...EXPORT_META_COLS, ...critics, 'Commentaires'];
+  const rows = wines.map(w => {
     const row = {};
     EXPORT_META_COLS.forEach(c => { row[c] = w[c] || ''; });
-    state.criticCols.forEach(c => { row[c] = w[c] || ''; });
+    critics.forEach(c => { row[c] = w[c] || ''; });
     row['Commentaires'] = Object.entries(w._comments || {})
       .map(([critic, comment]) => `${CRITIC_ABBREV[critic] || critic}: ${comment}`)
       .join(' | ');
     return row;
   });
+  return { header, rows };
 }
 
 function exportXLSX() {
-  const rows = buildExportRows();
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const { header, rows } = buildExportRows(lastFiltered);
+  const ws = XLSX.utils.json_to_sheet(rows, { header });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Wine Awards');
   const today = new Date();
   const dateStr = [String(today.getDate()).padStart(2, '0'), String(today.getMonth() + 1).padStart(2, '0'), today.getFullYear()].join('-');
-  XLSX.writeFile(wb, `wine-awards-lurton-${dateStr}.xlsx`);
+  const suffix = activeFilterChips().length ? '-filtre' : '';
+  XLSX.writeFile(wb, `wine-awards-lurton${suffix}-${dateStr}.xlsx`);
 }
 
 // ── Admin CRUD ────────────────────────────────────────────────────────────────
