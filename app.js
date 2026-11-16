@@ -51,7 +51,6 @@ const CRITIC_ABBREV = {
 };
 
 const COUNTRY_CODE = { 'france': 'FR', 'argentine': 'AR', 'espagne': 'ES', 'chili': 'CL' };
-const COUNTRY_FLAG = { 'france': '🇫🇷', 'argentine': '🇦🇷', 'espagne': '🇪🇸', 'chili': '🇨🇱' };
 const ICON_PENCIL_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.232 5.232l3.536 3.536M9 13l6.232-6.232a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.94l-3.114 1.04 1.04-3.114a4 4 0 01.94-1.414z"/></svg>';
 
 // ── Translations ──────────────────────────────────────────────────────────────
@@ -1061,15 +1060,12 @@ function openModal(idx) {
 
   const colorClass = colorCssClass(wine['Couleur']);
   const stock = isInStock(wine);
-  const pays = norm(wine['Pays']);
-  const code = COUNTRY_CODE[pays] || '';
-  const flag = COUNTRY_FLAG[pays] || '';
 
   // Header
   document.getElementById('modalHeader').className =
     `border-l-4 px-6 pt-6 pb-4 flex-shrink-0 modal-${colorClass}`;
-  document.getElementById('modalDomaine').textContent =
-    `${(wine['Domaine ou Marque'] || '').trim()} · ${flag} ${code}`;
+  // Le pays figure déjà dans la ligne millésime · couleur · pays
+  document.getElementById('modalDomaine').textContent = (wine['Domaine ou Marque'] || '').trim();
   document.getElementById('modalNom').textContent = wine['Nom du vin'] || '';
   document.getElementById('modalMeta').textContent =
     `${wine['Millésime'] || '—'} · ${(wine['Couleur'] || '').trim()} · ${(wine['Pays'] || '').trim()}`;
