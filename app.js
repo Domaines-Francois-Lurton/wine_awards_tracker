@@ -102,6 +102,11 @@ const T = {
     aucuneNouvelleNote: 'Aucune nouvelle note sur cette période.',
     nbNotes: (n, periode) => `${n} note${n > 1 ? 's' : ''} · ${periode}`,
     copierLaNote: 'Copier cette note',
+    parVin: 'Par vin',
+    nMillesimes: n => `${n} millésime${n > 1 ? 's' : ''}`,
+    vinsGroupes: (n, m) => `${n} vin${n > 1 ? 's' : ''} · ${m} millésime${m > 1 ? 's' : ''}`,
+    copierTousMillesimes: 'Copier les notes de tous les millésimes',
+    sansMillesime: 'Sans mill.',
     countries: { france: 'France', argentine: 'Argentine', espagne: 'Espagne', chili: 'Chili' },
     colors: { rouge: 'Rouge', blanc: 'Blanc', 'rosé': 'Rosé', rose: 'Rosé', autre: 'Autre' },
   },
@@ -152,6 +157,11 @@ const T = {
     aucuneNouvelleNote: 'No new scores for this period.',
     nbNotes: (n, periode) => `${n} score${n > 1 ? 's' : ''} · ${periode}`,
     copierLaNote: 'Copy this score',
+    parVin: 'By wine',
+    nMillesimes: n => `${n} vintage${n > 1 ? 's' : ''}`,
+    vinsGroupes: (n, m) => `${n} wine${n > 1 ? 's' : ''} · ${m} vintage${m > 1 ? 's' : ''}`,
+    copierTousMillesimes: 'Copy scores for all vintages',
+    sansMillesime: 'No vintage',
     countries: { france: 'France', argentine: 'Argentina', espagne: 'Spain', chili: 'Chile' },
     colors: { rouge: 'Red', blanc: 'White', 'rosé': 'Rosé', rose: 'Rosé', autre: 'Other' },
   }
@@ -175,8 +185,9 @@ const state = {
     critic: new Set(), // noms exacts des critiques
     avail: new Set(),
   },
-  sort: 'score',
-  view: 'grid', // 'grid' | 'list'
+  sort: 'millesime', // par défaut : millésime le plus récent d'abord
+  view: window.innerWidth < 640 ? 'grid' : 'list', // 'grid' | 'list' | 'grouped' ; liste par défaut (vignettes sur mobile)
+  expanded: new Set(), // vue « Par vin » : clés des vins dépliés
   selected: new Set(),
   modalIdx: null,
   news: null, // { year, month } quand la vue « Nouvelles notes » est ouverte
@@ -372,7 +383,7 @@ function computeKPIs(wines) {
     if (getScores(w).length) noteCount++;
     if (maxScore(w) >= 95) elite++;
   });
-  const avg = all.length ? (all.reduce((a, b) => a + b, 0) / all.length).toFixed(1) : '—';
+  const avg = all.length ? (all.reduce((a, b) => a + b, 0) / all.length).toFixed(1) : '-';
   document.getElementById('kpiTotal').textContent = wines.length;
   document.getElementById('kpiNoted').textContent = noteCount;
   document.getElementById('kpiAvg').innerHTML = avg + '<span class="text-base font-normal text-slate-400">/100</span>';
@@ -562,7 +573,7 @@ function renderRecentNotes(wines) {
   const latest = datedNoteEntries(wines).slice(0, 15);
 
   if (!latest.length) {
-    el.innerHTML = '<div class="text-xs text-slate-400 italic py-2">—</div>';
+    el.innerHTML = '<div class="text-xs text-slate-400 italic py-2">-</div>';
     return;
   }
 
@@ -703,7 +714,7 @@ function renderCard(wine, originalIdx) {
       <!-- Nom du vin + millésime -->
       <div class="card-name-row">
         <span class="card-name">${wine['Nom du vin'] || ''}</span>
-        <span class="card-vintage-inline">${wine['Millésime'] || '—'}</span>
+        <span class="card-vintage-inline">${wine['Millésime'] || '-'}</span>
       </div>
 
       <!-- Badges de score -->
@@ -730,7 +741,11 @@ function renderRow(wine, originalIdx) {
   const pays = norm(wine['Pays']);
   const code = COUNTRY_CODE[pays] || '';
 
-  const badgesHTML = buildBadgesHTML(wine);
+  // Vue liste : tous les badges ; fitListBadges() masque ceux qui ne tiennent pas sur la ligne
+  const allBadges = getDisplayScores(wine);
+  const badgesHTML = allBadges.length
+    ? allBadges.map(scoreBadgeHTML).join('') + '<span class="badge-extra" style="display:none"></span>'
+    : '';
 
   const colorDot = {
     'color-rouge': 'var(--wine-rouge)',
@@ -747,7 +762,7 @@ function renderRow(wine, originalIdx) {
       <!-- Nom + millésime -->
       <div class="list-name-cell">
         <span class="list-name">${wine['Nom du vin'] || ''}</span>
-        <span class="list-vintage">${wine['Millésime'] || '—'}</span>
+        <span class="list-vintage">${wine['Millésime'] || '-'}</span>
       </div>
 
       <!-- Domaine + pays -->
@@ -757,7 +772,7 @@ function renderRow(wine, originalIdx) {
       </div>
 
       <!-- Scores -->
-      <div class="list-badges">${badgesHTML || '<span class="no-score">—</span>'}</div>
+      <div class="list-badges">${badgesHTML || '<span class="no-score">-</span>'}</div>
 
       <!-- Actions -->
       <div class="list-actions">
@@ -771,6 +786,174 @@ function renderRow(wine, originalIdx) {
     </div>`;
 }
 
+// Vue liste : affiche autant de badges que la largeur le permet, sur une seule
+// ligne ; « +N » n'apparaît que pour les notes qui ne rentrent vraiment pas.
+function fitBadgeRow(el, itemSelector = '.score-badge') {
+  const badges = el.querySelectorAll(itemSelector);
+  const extra = el.querySelector('.badge-extra');
+  if (!extra) return;
+  badges.forEach(b => { b.style.display = ''; });
+  extra.style.display = 'none';
+  let shown = badges.length;
+  while (shown > 1 && el.scrollWidth > el.clientWidth) {
+    badges[--shown].style.display = 'none';
+    extra.textContent = `+${badges.length - shown}`;
+    extra.style.display = '';
+  }
+  extra.title = shown < badges.length
+    ? Array.from(badges).slice(shown).map(b => b.textContent).join(', ')
+    : '';
+}
+
+function fitListBadges(container = document.getElementById('wineGrid')) {
+  if (state.view === 'grid') return;
+  if (!container.clientWidth) return; // catalogue masqué (vue Nouvelles notes) : refait au réaffichage
+  container.querySelectorAll('.list-badges').forEach(el => fitBadgeRow(el));
+  container.querySelectorAll('.grp-frise').forEach(el => fitBadgeRow(el, '.vchip'));
+}
+
+// ── Vue « Par vin » : un vin (domaine + nom + couleur) et tous ses millésimes ──
+// Un vin s'affiche dès qu'un de ses millésimes passe les filtres ; ses autres
+// millésimes restent visibles mais estompés, pour garder la vision d'ensemble.
+let lastGroups = new Map(); // clé → groupe affiché
+
+const wineKey = w => [w['Domaine ou Marque'], w['Nom du vin'], w['Couleur']].map(s => deaccent(norm(s))).join('|');
+const vintageNum = w => { const n = parseInt(w['Millésime'], 10); return isNaN(n) ? -1 : n; };
+const vintageLabel = w => (w['Millésime'] || '').trim() || t('sansMillesime');
+
+function buildGroups(matched) {
+  const matchedSet = new Set(matched);
+  const byKey = new Map();
+  state.wines.forEach(w => {
+    const k = wineKey(w);
+    if (!byKey.has(k)) byKey.set(k, { key: k, wines: [] });
+    byKey.get(k).wines.push(w);
+  });
+  const groups = [...byKey.values()].filter(g => g.wines.some(w => matchedSet.has(w)));
+  groups.forEach(g => {
+    g.wines.sort((a, b) => vintageNum(b) - vintageNum(a)); // plus récent d'abord, sans millésime à la fin
+    g.isMatch = w => matchedSet.has(w);
+    g.best = Math.max(0, ...g.wines.map(maxScore));
+    g.latest = Math.max(...g.wines.map(vintageNum));
+  });
+  const ref = g => g.wines[0];
+  const byName = (a, b) => (ref(a)['Nom du vin'] || '').localeCompare(ref(b)['Nom du vin'] || '');
+  const byDomaine = (a, b) => (ref(a)['Domaine ou Marque'] || '').localeCompare(ref(b)['Domaine ou Marque'] || '') || byName(a, b);
+  const sorters = {
+    score: (a, b) => b.best - a.best || byName(a, b),
+    name: byName,
+    domaine: byDomaine,
+    millesime: (a, b) => b.latest - a.latest || byName(a, b),
+  };
+  return groups.sort(sorters[state.sort] || sorters.millesime);
+}
+
+function renderGroup(g) {
+  const w0 = g.wines[0];
+  const colorDot = `var(--wine-${{ 'color-rouge': 'rouge', 'color-blanc': 'blanc', 'color-rose': 'rose' }[colorCssClass(w0['Couleur'])] || 'autre'})`;
+  const years = g.wines.map(vintageNum).filter(n => n > 0);
+  const range = years.length ? (Math.min(...years) === Math.max(...years) ? `${years[0]}` : `${Math.min(...years)}-${Math.max(...years)}`) : '';
+  const open = state.expanded.has(g.key);
+
+  const chips = g.wines.map(w => {
+    const best = getDisplayScores(w)[0];
+    const mil = vintageLabel(w);
+    const title = best ? `${mil} : ${CRITIC_ABBREV[best.col] || best.col} ${best.val}` : `${mil} : ${t('aucuneNote')}`;
+    return `<span class="vchip ${g.isMatch(w) ? '' : 'is-dim'}" title="${escAttr(title)}">`
+      + `<span class="vchip__year">${mil}</span> ` // espace : sépare année et note dans l'infobulle « +N »
+      + `<span class="score-badge ${best ? best.cls : ''}">${best ? best.display : '-'}</span></span>`;
+  }).join('');
+
+  return `
+    <div class="grp ${open ? 'is-open' : ''}" data-key="${escAttr(g.key)}">
+      <div class="grp-head" role="button" tabindex="0" aria-expanded="${open}">
+        <span class="list-color-dot" style="background:${colorDot}"></span>
+        <div class="grp-name-cell">
+          <span class="list-name">${w0['Nom du vin'] || ''}</span>
+          <span class="grp-meta">${t('nMillesimes', g.wines.length)}${range ? ` · ${range}` : ''}</span>
+        </div>
+        <div class="list-domaine-cell">
+          <span class="list-domaine">${(w0['Domaine ou Marque'] || '').trim()}</span>
+          <span class="list-code">${COUNTRY_CODE[norm(w0['Pays'])] || ''}</span>
+        </div>
+        <div class="grp-frise">${chips}<span class="badge-extra" style="display:none"></span></div>
+        <div class="list-actions">
+          <button type="button" class="grp-copy" title="${escAttr(t('copierTousMillesimes'))}">${COPY_ICON_SVG}</button>
+          <svg class="grp-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="grp-body">${open ? renderGroupBody(g) : ''}</div>
+    </div>`;
+}
+
+// Détail d'un vin déplié : une ligne par millésime avec toutes ses notes
+function renderGroupBody(g) {
+  return g.wines.map(w => {
+    const idx = state.wines.indexOf(w);
+    const badges = getDisplayScores(w);
+    const isSelected = state.selected.has(idx);
+    const stock = isInStock(w);
+    return `
+      <div class="grp-sub-row ${g.isMatch(w) ? '' : 'is-dim'} ${isSelected ? 'selected' : ''}" data-idx="${idx}">
+        <span class="grp-sub-year">${vintageLabel(w)}</span>
+        <div class="list-badges">${badges.length
+          ? badges.map(scoreBadgeHTML).join('') + '<span class="badge-extra" style="display:none"></span>'
+          : `<span class="no-score">${t('aucuneNote')}</span>`}</div>
+        <div class="list-actions">
+          ${stockFeatureEnabled ? `<span class="list-stock ${stock ? 'en' : 'ep'}">${stock ? '● ' + t('enStock') : '○ ' + t('epuise')}</span>` : ''}
+          <button class="card-copy-btn" data-idx="${idx}" title="${t('copierNotes')}">${COPY_ICON_SVG}</button>
+          ${isAdmin ? `<button class="card-edit-btn" data-idx="${idx}" title="${t('modifier')}">${ICON_PENCIL_SVG}</button>` : ''}
+          <input type="checkbox" class="card-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''} />
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleGroup(el) {
+  const g = lastGroups.get(el.dataset.key);
+  if (!g) return;
+  const open = !state.expanded.has(g.key);
+  if (open) state.expanded.add(g.key); else state.expanded.delete(g.key);
+  el.classList.toggle('is-open', open);
+  el.querySelector('.grp-head').setAttribute('aria-expanded', String(open));
+  const body = el.querySelector('.grp-body');
+  body.innerHTML = open ? renderGroupBody(g) : '';
+  if (open) { bindEvents(body); fitListBadges(body); }
+}
+
+// Clics sur les en-têtes de vin (déplier, copier) : un seul écouteur sur la grille
+function initGroupedView() {
+  const grid = document.getElementById('wineGrid');
+  grid.addEventListener('click', e => {
+    if (state.view !== 'grouped') return;
+    const head = e.target.closest('.grp-head');
+    if (!head) return;
+    const el = head.closest('.grp');
+    if (e.target.closest('.grp-copy')) {
+      const g = lastGroups.get(el.dataset.key);
+      if (g) copyToClipboard(g.wines.map(buildCopyLine).join('\n'));
+      return;
+    }
+    toggleGroup(el);
+  });
+  grid.addEventListener('keydown', e => {
+    if (state.view !== 'grouped' || (e.key !== 'Enter' && e.key !== ' ')) return;
+    const head = e.target.closest('.grp-head');
+    if (!head || e.target !== head) return;
+    e.preventDefault();
+    toggleGroup(head.closest('.grp'));
+  });
+}
+
+// Recalcule à chaque changement de largeur (fenêtre, barre latérale, retour au catalogue)
+let lastGridWidth = 0;
+new ResizeObserver(entries => {
+  const w = Math.round(entries[0].contentRect.width);
+  if (w === lastGridWidth) return;
+  lastGridWidth = w;
+  fitListBadges();
+}).observe(document.getElementById('wineGrid'));
+
 // ── Grid (with progressive rendering for performance) ─────────────────────────
 const PAGE_SIZE = 60;
 let currentPage = 1;
@@ -778,7 +961,7 @@ let lastFiltered = [];
 
 // Attache tous les événements sur la grille (click modal, checkbox, copier)
 function bindEvents(container) {
-  const selector = state.view === 'list' ? '.list-row' : '.wine-card';
+  const selector = { list: '.list-row', grouped: '.grp-sub-row' }[state.view] || '.wine-card';
   container.querySelectorAll(selector).forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.card-checkbox') || e.target.closest('.card-copy-btn') || e.target.closest('.card-edit-btn')) return;
@@ -800,7 +983,7 @@ function bindEvents(container) {
       const idx = +cb.dataset.idx;
       if (cb.checked) state.selected.add(idx);
       else state.selected.delete(idx);
-      const card = cb.closest('.wine-card') || cb.closest('.list-row');
+      const card = cb.closest('.wine-card, .list-row, .grp-sub-row');
       if (card) card.classList.toggle('selected', cb.checked);
       updateMultiBar();
     });
@@ -823,6 +1006,22 @@ function renderGrid() {
 
   countEl.textContent = t('vinsTotal', lastFiltered.length);
   document.getElementById('exportXlsxBtn').title = t('exporterN', lastFiltered.length);
+
+  // Vue « Par vin » : tous les vins d'un coup (une centaine de lignes), sans pagination
+  if (state.view === 'grouped') {
+    grid.className = 'px-4 sm:px-6 pb-8 flex flex-col gap-2';
+    const groups = buildGroups(lastFiltered);
+    lastGroups = new Map(groups.map(g => [g.key, g]));
+    countEl.textContent = t('vinsGroupes', groups.length, lastFiltered.length);
+    if (!groups.length) {
+      grid.innerHTML = `<div class="col-span-full text-sm text-slate-400 py-16 text-center">${t('aucunVin')}</div>`;
+      return;
+    }
+    grid.innerHTML = groups.map(renderGroup).join('');
+    bindEvents(grid);
+    fitListBadges();
+    return;
+  }
 
   // Classes selon le mode
   if (state.view === 'list') {
@@ -851,6 +1050,7 @@ function renderGrid() {
   }
 
   bindEvents(grid);
+  fitListBadges();
 }
 
 function loadMoreCards() {
@@ -886,6 +1086,7 @@ function loadMoreCards() {
   }
 
   bindEvents(grid);
+  fitListBadges();
 }
 
 // ── Multi-select bar ──────────────────────────────────────────────────────────
@@ -981,7 +1182,6 @@ function renderNewsView() {
   const locale = state.lang === 'en' ? 'en-GB' : 'fr-FR';
   const monthShort = new Intl.DateTimeFormat(locale, { month: 'short' });
   const monthLong = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
-  const periode = news.month ? capitalize(monthLong.format(new Date(news.year, news.month - 1, 1))) : String(news.year);
 
   const monthBtns = [`<button type="button" class="news-month ${news.month ? '' : 'on'}" data-month="">${t('tousMois')}</button>`]
     .concat(Array.from({ length: 12 }, (_, i) => {
@@ -989,7 +1189,8 @@ function renderNewsView() {
       return `<button type="button" class="news-month ${news.month === m ? 'on' : ''}" data-month="${m}" ${months.has(m) ? '' : 'disabled'}>${capitalize(monthShort.format(new Date(news.year, i, 1)).replace('.', ''))}</button>`;
     })).join('');
 
-  // Groupes par mois, du plus récent au plus ancien (les entrées sont déjà triées)
+  // Groupes par mois, du plus récent au plus ancien (les entrées sont déjà triées).
+  // Même présentation avec ou sans mois choisi : compteur « N notes · année », puis titre de mois.
   let rows = '';
   let currentKey = '';
   news.shown.forEach((e, i) => {
@@ -999,14 +1200,26 @@ function renderNewsView() {
       rows += `<h3 class="news-group">${capitalize(monthLong.format(e.date))}</h3>`;
     }
     const w = e.wine;
+    const colorCls = colorCssClass(w['Couleur']);
+    const pays = (w['Pays'] || '').trim();
+    const couleur = (w['Couleur'] || '').trim();
+    const score = displayScore(e.note.critic, e.note.score);
+    const abbrev = CRITIC_ABBREV[e.note.critic] || e.note.critic;
+    const comment = (e.note.comment || '').trim();
     rows += `
-      <div class="news-row ${colorCssClass(w['Couleur'])}" data-i="${i}">
+      <div class="news-row ${colorCls}" data-i="${i}">
         <span class="news-row__date">${e.note.date.slice(0, 5)}</span>
         <span class="news-row__wine">
           <span class="news-row__domaine">${(w['Domaine ou Marque'] || '').trim()}</span>
           <span class="news-row__name">${w['Nom du vin'] || ''} <span class="news-row__vintage">${w['Millésime'] || ''}</span></span>
         </span>
-        ${scoreBadgeHTML(displayScore(e.note.critic, e.note.score))}
+        <span class="news-row__pays">${T[state.lang].countries[norm(pays)] || pays}</span>
+        <span class="news-row__couleur"><span class="news-dot ${colorCls}"></span>${T[state.lang].colors[norm(couleur)] || couleur}</span>
+        <span class="news-row__critic" title="${escAttr(comment ? `${e.note.critic} - ${comment}` : e.note.critic)}">
+          <span class="news-row__critic-name">${e.note.critic}</span>
+          ${comment ? `<span class="news-row__comment">${comment}</span>` : ''}
+        </span>
+        <span class="news-row__score"><span class="score-badge ${score.cls}" title="${escAttr(`${e.note.critic} : ${score.val}`)}"><span class="news-row__abbr">${abbrev} </span>${score.display}</span></span>
         <button type="button" class="news-row__copy" data-copy="${i}" title="${escAttr(t('copierLaNote'))}">${COPY_ICON_SVG}</button>
       </div>`;
   });
@@ -1021,8 +1234,8 @@ function renderNewsView() {
       <select class="news-year" aria-label="${escAttr(t('annee'))}">${years.map(y => `<option value="${y}" ${y === news.year ? 'selected' : ''}>${y}</option>`).join('')}</select>
       <div class="news-months scrollbar-hide">${monthBtns}</div>
     </div>
-    <p class="news-count">${t('nbNotes', news.shown.length, periode)}</p>
-    ${rows || `<p class="news-empty">${t('aucuneNouvelleNote')}</p>`}`;
+    <p class="news-count">${t('nbNotes', news.shown.length, news.year)}</p>
+    ${rows ||`<p class="news-empty">${t('aucuneNouvelleNote')}</p>`}`;
 }
 
 function initNewsView() {
@@ -1068,7 +1281,7 @@ function openModal(idx) {
   document.getElementById('modalDomaine').textContent = (wine['Domaine ou Marque'] || '').trim();
   document.getElementById('modalNom').textContent = wine['Nom du vin'] || '';
   document.getElementById('modalMeta').textContent =
-    `${wine['Millésime'] || '—'} · ${(wine['Couleur'] || '').trim()} · ${(wine['Pays'] || '').trim()}`;
+    `${wine['Millésime'] || '-'} · ${(wine['Couleur'] || '').trim()} · ${(wine['Pays'] || '').trim()}`;
 
   // Notes — les plus récentes d'abord (mois + badge « Nouveau »), puis l'historique
   // dans le même classement que les badges. La fiche affiche la valeur brute
@@ -1331,7 +1544,7 @@ function initAdminPanel() {
       .sort((a, b) => (+b['Millésime'] || 0) - (+a['Millésime'] || 0));
     listEl.innerHTML = filtered.map(w => `
       <div class="admin-wine-row" data-id="${w._id}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #334155;font-size:0.78rem">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(w['Domaine ou Marque'] || '').trim()} — ${w['Nom du vin'] || ''} (${w['Millésime'] || '—'})</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(w['Domaine ou Marque'] || '').trim()} - ${w['Nom du vin'] || ''} (${w['Millésime'] || '-'})</span>
         <div class="admin-row-actions">
           <button class="admin-row-btn" data-action="duplicate" data-id="${w._id}" title="Dupliquer">${ICON_DUPLICATE_SVG}</button>
           <button class="admin-row-btn" data-action="edit" data-id="${w._id}" title="Modifier">${ICON_PENCIL_SVG}</button>
@@ -1591,30 +1804,23 @@ async function init() {
   document.getElementById('langEn')?.addEventListener('click', () => setLang('en'));
   applyLang();
 
-  // ── Toggle vue grille / liste (desktop uniquement) ────────────────────────
-  function enforceGridOnMobile() {
-    if (window.innerWidth < 640 && state.view === 'list') {
-      state.view = 'grid';
-      document.getElementById('viewGrid').classList.add('active');
-      document.getElementById('viewList').classList.remove('active');
-      renderGrid();
-    }
+  // ── Toggle vue vignettes / liste / par vin (liste et par vin : desktop uniquement) ──
+  const VIEW_BTNS = { grid: 'viewGrid', list: 'viewList', grouped: 'viewGrouped' };
+  const syncViewButtons = () => Object.entries(VIEW_BTNS)
+    .forEach(([v, id]) => document.getElementById(id).classList.toggle('active', state.view === v));
+  function setView(v) {
+    if (v !== 'grid' && window.innerWidth < 640) return; // désactivé sur mobile
+    state.view = v;
+    syncViewButtons();
+    renderGrid();
   }
-  window.addEventListener('resize', enforceGridOnMobile);
-
-  document.getElementById('viewGrid').addEventListener('click', () => {
-    state.view = 'grid';
-    document.getElementById('viewGrid').classList.add('active');
-    document.getElementById('viewList').classList.remove('active');
-    renderGrid();
+  window.addEventListener('resize', () => {
+    if (window.innerWidth < 640 && state.view !== 'grid') setView('grid');
   });
-  document.getElementById('viewList').addEventListener('click', () => {
-    if (window.innerWidth < 640) return; // désactivé sur mobile
-    state.view = 'list';
-    document.getElementById('viewList').classList.add('active');
-    document.getElementById('viewGrid').classList.remove('active');
-    renderGrid();
-  });
+  syncViewButtons(); // boutons alignés sur la vue par défaut
+  Object.entries(VIEW_BTNS).forEach(([v, id]) =>
+    document.getElementById(id).addEventListener('click', () => setView(v)));
+  initGroupedView();
 
   // ── Sidebar mobile toggle ──────────────────────────────────────────────────
   const sidebar   = document.getElementById('sidebar');
@@ -1673,6 +1879,8 @@ function applyLang() {
   const vl = document.getElementById('viewList');
   if (vg) vg.title = t('vignettes');
   if (vl) vl.title = t('liste');
+  const vgr = document.getElementById('viewGrouped');
+  if (vgr) vgr.title = t('parVin');
   // Lang toggle UI
   const btnFr = document.getElementById('langFr');
   const btnEn = document.getElementById('langEn');
